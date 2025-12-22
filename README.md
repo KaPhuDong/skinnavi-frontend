@@ -67,7 +67,7 @@ Update values if needed.
 
 ---
 
-## ▶️ Start the Backend Server
+## ▶️ Start the Frontend Server
 
 ```bash
 npm run dev
