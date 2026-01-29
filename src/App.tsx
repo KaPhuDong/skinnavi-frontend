@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Register from '@/features/auth/pages/Register'
+import Scan from '@/features/auth/pages/Scan'
 
 function App() {
   return (
@@ -8,6 +9,8 @@ function App() {
         <Route path="/" element={<Navigate to="/register" replace />} />
 
         <Route path="/register" element={<Register />} />
+
+        <Route path="/scan" element={<Scan />} />
 
         {/* <Route path="/login" element={<LoginPage />} /> */}
 
