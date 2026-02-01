@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Sparkles, Loader2 } from 'lucide-react'
+import { CheckCircle2, Sparkles, Loader2, X, Star } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { useNavigate, useParams } from 'react-router-dom'
 import { env } from '@/config/env'
 import type { RoutinePackage, RoutinePackagesResponse } from './types/index'
+
+// Import assets
 import detailPackage1 from '@/shared/assets/images/detail_package1.png'
 import detailPackage2 from '@/shared/assets/images/detail_package2.png'
 import product1 from '@/shared/assets/images/product1.png'
@@ -12,10 +14,46 @@ import product3 from '@/shared/assets/images/product3.png'
 import product4 from '@/shared/assets/images/product4.png'
 
 const featuredProducts = [
-  { id: 1, name: 'Alpha Arbutin & Vitamin C', price: 135.0, originalPrice: 150.0, image: product1 },
-  { id: 2, name: 'Firming Lift Eye Gel', price: 100.0, originalPrice: 140.0, image: product2 },
-  { id: 3, name: 'Vitamin C Serum', price: 50.0, originalPrice: 100.0, image: product3 },
-  { id: 4, name: 'Vitamin C Serum', price: 50.0, originalPrice: 100.0, image: product4 }
+  {
+    id: 1,
+    name: 'Alpha Arbutin & Vitamin C',
+    price: 135.0,
+    originalPrice: 150.0,
+    image: product1,
+    description:
+      'Enrich your skin with the essence of Rose and Chamomile. Gives a soothing effect and calms the skin. Has anti-ageing properties best used as a sleeping masque.',
+    rating: 4.8
+  },
+  {
+    id: 2,
+    name: 'Firming Lift Eye Gel',
+    price: 100.0,
+    originalPrice: 140.0,
+    image: product2,
+    description:
+      'Advanced formula to reduce fine lines and wrinkles around the eye area. Improves skin elasticity and firmness.',
+    rating: 4.7
+  },
+  {
+    id: 3,
+    name: 'Vitamin C Serum',
+    price: 50.0,
+    originalPrice: 100.0,
+    image: product3,
+    description:
+      'Brightening serum that helps reduce dark spots and even skin tone. Rich in antioxidants for healthy, glowing skin.',
+    rating: 4.9
+  },
+  {
+    id: 4,
+    name: 'Vitamin C Serum',
+    price: 50.0,
+    originalPrice: 100.0,
+    image: product4,
+    description:
+      'Powerful anti-aging formula with high concentration of Vitamin C. Protects skin from environmental damage.',
+    rating: 4.6
+  }
 ]
 
 const TrialPlan = () => {
@@ -23,6 +61,7 @@ const TrialPlan = () => {
   const { days } = useParams<{ days: string }>()
   const [packageData, setPackageData] = useState<RoutinePackage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedProduct, setSelectedProduct] = useState<(typeof featuredProducts)[0] | null>(null)
 
   useEffect(() => {
     const fetchPackage = async () => {
@@ -50,8 +89,27 @@ const TrialPlan = () => {
     navigate('/register')
   }
 
-  const handleShopNow = (productId: number) => {
-    navigate(`/products/${productId}`)
+  const handleProductClick = (product: (typeof featuredProducts)[0]) => {
+    setSelectedProduct(product)
+  }
+
+  const closeModal = () => {
+    setSelectedProduct(null)
+  }
+
+  const handleBuyNow = () => {
+    if (selectedProduct) {
+      navigate(`/products/${selectedProduct.id}`)
+      closeModal()
+    }
+  }
+
+  const handleApply = () => {
+    if (selectedProduct) {
+      // Logic thêm vào giỏ hàng hoặc apply vào routine
+      console.log('Apply product:', selectedProduct.id)
+      closeModal()
+    }
   }
 
   if (isLoading) {
@@ -170,7 +228,8 @@ const TrialPlan = () => {
             {featuredProducts.map((product, index) => (
               <div
                 key={product.id}
-                className="group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200 opacity-0 animate-fade-in-up hover:-translate-y-2"
+                onClick={() => handleProductClick(product)}
+                className="group bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200 opacity-0 animate-fade-in-up hover:-translate-y-2 cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-6 aspect-square flex items-center justify-center overflow-hidden">
@@ -197,10 +256,7 @@ const TrialPlan = () => {
                       </p>
                     )}
                   </div>
-                  <Button
-                    onClick={() => handleShopNow(product.id)}
-                    className="w-full bg-blue-400 hover:bg-blue-500 text-white rounded-lg md:rounded-xl py-2 md:py-2.5 text-sm md:text-base font-medium transition-all duration-300 hover:shadow-lg active:scale-95"
-                  >
+                  <Button className="w-full bg-blue-400 hover:bg-blue-500 text-white rounded-lg md:rounded-xl py-2 md:py-2.5 text-sm md:text-base font-medium transition-all duration-300 hover:shadow-lg active:scale-95">
                     Shop Now
                   </Button>
                 </div>
@@ -218,6 +274,94 @@ const TrialPlan = () => {
           </div>
         </div>
       </section>
+
+      {/* Product Detail Modal */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl animate-scale-up relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition-all duration-300 hover:rotate-90 z-10"
+            >
+              <X className="w-5 h-5 text-gray-700" />
+            </button>
+
+            <div className="grid md:grid-cols-2 gap-6 p-6 md:p-8">
+              {/* Product Image */}
+              <div className="relative">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 aspect-square flex items-center justify-center">
+                  <div className="w-full h-full bg-white/50 rounded-xl flex items-center justify-center">
+                    <img
+                      src={selectedProduct.image}
+                      alt={selectedProduct.name}
+                      className="w-3/4 h-3/4 object-contain animate-float-slow"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Info */}
+              <div className="flex flex-col">
+                <div className="flex-1">
+                  <h2 className="text-2xl md:text-3xl font-bold text-blue-500 mb-4">
+                    Product Detail
+                  </h2>
+
+                  <p className="text-gray-700 text-sm md:text-base leading-relaxed mb-4">
+                    Enrich your skin with the essence of <span className="font-semibold">Rose</span>{' '}
+                    and <span className="font-semibold">Chamomile</span>. Gives a soothing effect
+                    and calms the skin. Has anti-ageing properties best used as a sleeping masque.
+                  </p>
+
+                  {/* Price */}
+                  <div className="mb-4">
+                    <p className="text-3xl md:text-4xl font-bold text-blue-500">
+                      ${selectedProduct.price.toFixed(0)}
+                    </p>
+                    {selectedProduct.originalPrice > selectedProduct.price && (
+                      <p className="text-sm text-gray-500 line-through">
+                        ${selectedProduct.originalPrice.toFixed(0)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2 mb-6">
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <span className="text-lg font-semibold text-gray-900">
+                      {selectedProduct.rating}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleBuyNow}
+                    variant="outline"
+                    className="flex-1 border-2 border-blue-400 text-blue-500 hover:bg-blue-50 rounded-xl py-3 font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+                  >
+                    BUY NOW
+                  </Button>
+                  <Button
+                    onClick={handleApply}
+                    className="flex-1 bg-blue-400 hover:bg-blue-500 text-white rounded-xl py-3 font-medium transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-lg"
+                  >
+                    APPLY
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes fadeInUp {
@@ -253,6 +397,26 @@ const TrialPlan = () => {
           }
         }
 
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes scaleUp {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
         @keyframes float {
           0%, 100% {
             transform: translateY(0px) translateX(0px);
@@ -265,6 +429,15 @@ const TrialPlan = () => {
           }
           75% {
             transform: translateY(-5px) translateX(3px);
+          }
+        }
+
+        @keyframes floatSlow {
+          0%, 100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
           }
         }
 
@@ -309,6 +482,14 @@ const TrialPlan = () => {
 
         .animate-fade-in-right {
           animation: fadeInRight 0.8s ease-out forwards;
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .animate-scale-up {
+          animation: scaleUp 0.3s ease-out forwards;
         }
 
         .animate-float {
