@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Register from '@/features/auth/pages/Register'
+import AnalysisResult from './features/analysis-result/pages/AnalysisResult'
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
         <Route path="/" element={<Navigate to="/register" replace />} />
 
         <Route path="/register" element={<Register />} />
+        <Route path="/analysis-result" element={<AnalysisResult />} />
 
         {/* <Route path="/login" element={<LoginPage />} /> */}
 
