@@ -1,17 +1,19 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { MainLayout } from '@/shared/layouts/MainLayout'
 import Register from '@/features/auth/pages/Register'
+import Home from '@/features/home/pages/Home'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/register" replace />} />
-
         <Route path="/register" element={<Register />} />
 
-        {/* <Route path="/login" element={<LoginPage />} /> */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+        </Route>
 
-        {/* Route 404 - Not Found */}
         <Route
           path="*"
           element={
