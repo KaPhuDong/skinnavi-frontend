@@ -7,27 +7,17 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 1. Nhóm các trang dùng chung Header & Footer */}
-        <Route element={<MainLayout />}>
-          {/* Mặc định vào trang chủ */}
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<Home />} />
-          
-          {/* Ví dụ thêm trang sau này: 
-          <Route path="/routine" element={<RoutinePage />} /> 
-          */}
-        </Route>
-
-        {/* 2. Các trang độc lập (Không có Header/Footer chung) */}
         <Route path="/register" element={<Register />} />
 
-        {/* 3. Trang lỗi 404 */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+        </Route>
+
         <Route
           path="*"
           element={
-            <div className="flex h-screen items-center justify-center">
-              404 - Page Not Found
-            </div>
+            <div className="flex h-screen items-center justify-center">404 - Page Not Found</div>
           }
         />
       </Routes>
