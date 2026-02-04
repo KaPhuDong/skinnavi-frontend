@@ -13,7 +13,7 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/dailyroutine" element={<DailyRoutine />} />
+          <Route path="/daily-routine" element={<DailyRoutine />} />
         </Route>
 
         <Route

@@ -1,62 +1,8 @@
-import { useState } from 'react'
-import { Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react'
-import profile from '../../../shared/assets/images/image 14.png'
-
-// Mock data - replace with actual API
-const routineSteps = {
-  morning: [
-    {
-      id: 1,
-      step: 'Cleansing',
-      stepNumber: 1,
-      product: 'Gentle facial cleanser',
-      productImage: '/products/cleanser.png',
-      backgroundColor: 'bg-blue-50'
-    },
-    {
-      id: 2,
-      step: 'Toning',
-      stepNumber: 2,
-      product: 'Hydrating toner',
-      productImage: '/products/toner.png',
-      backgroundColor: 'bg-purple-50'
-    },
-    {
-      id: 3,
-      step: 'Moisturizing',
-      stepNumber: 3,
-      product: 'Lightweight moisturizer',
-      productImage: '/products/moisturizer.png',
-      backgroundColor: 'bg-blue-50'
-    }
-  ],
-  evening: [
-    {
-      id: 1,
-      step: 'Cleansing',
-      stepNumber: 1,
-      product: 'Gentle facial cleanser',
-      productImage: '/products/cleanser.png',
-      backgroundColor: 'bg-blue-50'
-    },
-    {
-      id: 2,
-      step: 'Toning',
-      stepNumber: 2,
-      product: 'Hydrating toner',
-      productImage: '/products/toner.png',
-      backgroundColor: 'bg-purple-50'
-    },
-    {
-      id: 3,
-      step: 'Moisturizing',
-      stepNumber: 3,
-      product: 'Lightweight moisturizer',
-      productImage: '/products/moisturizer.png',
-      backgroundColor: 'bg-blue-50'
-    }
-  ]
-}
+import { useState, useEffect } from 'react'
+import { Sun, Moon, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { env } from '@/config/env'
+import profile from '@/shared/assets/images/image 14.png'
+import type { Routine, RoutineResponse } from '../types/index'
 
 const routineTips = [
   {
@@ -82,14 +28,72 @@ const getFirstDayOfMonth = (year: number, month: number) => {
   return new Date(year, month, 1).getDay()
 }
 
+// Get background color based on usage role
+const getBackgroundColor = (role: string) => {
+  const colorMap: Record<string, string> = {
+    Cleanser: 'bg-blue-50',
+    Toner: 'bg-purple-50',
+    Moisturizer: 'bg-blue-50',
+    Exfoliator: 'bg-pink-50',
+    Serum: 'bg-green-50',
+    Sunscreen: 'bg-yellow-50'
+  }
+  return colorMap[role] || 'bg-gray-50'
+}
+
 const DailyRoutine = () => {
   const [activeTab, setActiveTab] = useState<'morning' | 'evening'>('morning')
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [routines, setRoutines] = useState<Routine[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth()
   const daysInMonth = getDaysInMonth(currentYear, currentMonth)
   const firstDayOfMonth = getFirstDayOfMonth(currentYear, currentMonth)
+
+  // Fetch routines from API
+  useEffect(() => {
+    const fetchRoutines = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        // Get userId from localStorage or auth context
+        const userId = localStorage.getItem('userId') || 'default-user-id'
+
+        const response = await fetch(`${env.API_URL}/routines/${userId}`, {
+          headers: {
+            'Content-Type': 'application/json'
+            // Add authentication token if needed
+            // 'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch routines')
+        }
+
+        const result: RoutineResponse = await response.json()
+
+        if (result.success) {
+          setRoutines(result.data)
+        } else {
+          setError(result.message)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        console.error('Error fetching routines:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRoutines()
+  }, [])
+
+  // Get current routine based on active tab
+  const currentRoutine = routines.find((r) => r.routine_time === activeTab.toUpperCase())
 
   // Generate calendar days
   const calendarDays = []
@@ -125,8 +129,31 @@ const DailyRoutine = () => {
     setCurrentDate(new Date(currentYear, currentMonth + 1, 1))
   }
 
-  // Mock completed days (replace with actual data)
+  // Mock completed days (replace with actual data from API)
   const completedDays = [2, 4, 5, 6, 9, 10, 11, 12, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 30, 31]
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-400 mx-auto mb-4" />
+          <p className="text-gray-600">Loading your routine...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">⚠️</div>
+          <p className="text-gray-800 font-medium mb-2">Failed to load routine</p>
+          <p className="text-gray-600 text-sm">{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -173,50 +200,75 @@ const DailyRoutine = () => {
               </div>
             </div>
 
-            {/* Routine Steps - Updated UI */}
-            <div className="space-y-0">
-              {routineSteps[activeTab].map((step, index) => (
-                <div key={step.id} className="relative">
-                  {/* Step Item */}
-                  <div className="flex items-start gap-4">
-                    {/* Step Number with Line */}
-                    <div className="flex flex-col items-center">
-                      <div className="w-9 h-9 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                        {step.stepNumber}
-                      </div>
-                      {/* Vertical Line */}
-                      {index < routineSteps[activeTab].length - 1 && (
-                        <div
-                          className="w-0.5 h-full bg-blue-200 my-1"
-                          style={{ minHeight: '60px' }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Step Content */}
-                    <div className="flex-1 pb-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-3">{step.step}</h3>
-
-                      {/* Product Card */}
-                      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                        <div
-                          className={`w-16 h-16 ${step.backgroundColor} rounded-xl flex items-center justify-center p-3 flex-shrink-0`}
-                        >
-                          <img
-                            src={step.productImage}
-                            alt={step.product}
-                            className="w-full h-full object-contain"
-                          />
+            {/* Routine Steps from API */}
+            {currentRoutine && currentRoutine.steps.length > 0 ? (
+              <div className="space-y-0">
+                {currentRoutine.steps
+                  .sort((a, b) => a.step_order - b.step_order)
+                  .map((step, index) => (
+                    <div key={step.id} className="relative">
+                      {/* Step Item */}
+                      <div className="flex items-start gap-4">
+                        {/* Step Number with Line */}
+                        <div className="flex flex-col items-center">
+                          <div className="w-9 h-9 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            {step.step_order}
+                          </div>
+                          {/* Vertical Line */}
+                          {index < currentRoutine.steps.length - 1 && (
+                            <div
+                              className="w-0.5 h-full bg-blue-200 my-1"
+                              style={{ minHeight: '60px' }}
+                            />
+                          )}
                         </div>
-                        <p className="text-gray-800 font-medium text-sm">{step.product}</p>
+
+                        {/* Step Content */}
+                        <div className="flex-1 pb-6">
+                          <h3 className="text-lg font-bold text-gray-900 mb-3">
+                            {step.product.usage_role}
+                          </h3>
+
+                          {/* Product Card */}
+                          <a
+                            href={`/routine/detail/${step.product.id}`}
+                            className="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div
+                                className={`w-16 h-16 ${getBackgroundColor(step.product.usage_role)} rounded-xl flex items-center justify-center p-3 flex-shrink-0`}
+                              >
+                                <img
+                                  src={step.product.image_url}
+                                  alt={step.product.name}
+                                  className="w-full h-full object-contain"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/placeholder-product.png'
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-gray-800 font-medium text-sm">
+                                  {step.product.name}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {step.instruction.substring(0, 60)}...
+                                </p>
+                              </div>
+                            </div>
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No routine found for {activeTab}</p>
+              </div>
+            )}
 
-            {/* Routine Tips - Updated UI */}
+            {/* Routine Tips */}
             <div className="mt-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Routine Tips</h3>
 
