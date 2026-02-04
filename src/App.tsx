@@ -22,7 +22,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/home" element={<Home />} />
             <Route path="/analysis-result" element={<AnalysisResult />} />
-            <Route path="/routine-detail/:packageId" element={<DetailedRoutine />} />
+            <Route path="/routine-detail/:id" element={<DetailedRoutine />} />
           </Route>
         </Route>
 

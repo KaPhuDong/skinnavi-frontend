@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { CheckCircle2, Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
-import { env } from '@/config/env'
-import axios from 'axios'
+import { getRoutinePackage } from '../services/detail-packages.api'
 import type { RoutinePackage } from '../types/detail-routine'
 import { ProductList } from '../components/ProductList'
 
@@ -11,36 +10,42 @@ import detailPackage1 from '@/shared/assets/images/detail_package1.png'
 import detailPackage2 from '@/shared/assets/images/detail_package2.png'
 
 const DetailedRoutine = () => {
-  const { packageId } = useParams<{ packageId: string }>()
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [packageData, setPackageData] = useState<RoutinePackage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchPackage = async () => {
+    const fetchAndFilterPackage = async () => {
       setIsLoading(true)
       try {
-        const response = await axios.get(`${env.API_URL}/routines/packages`)
-        if (response.data.success) {
-          const matchedPlan = response.data.data.find((p: RoutinePackage) => p.id === packageId)
-          setPackageData(matchedPlan || null)
+        const matchedPackage = await getRoutinePackage(id!)
+        if (matchedPackage) {
+          setPackageData(matchedPackage)
+        } else {
+          console.error('Package not found for id:', id)
         }
       } catch (error) {
-        console.error('Failed to fetch package:', error)
+        console.error('Error fetching package data:', error)
       } finally {
         setIsLoading(false)
       }
     }
-    if (packageId) fetchPackage()
-  }, [packageId])
 
-  if (isLoading)
+    if (id) {
+      fetchAndFilterPackage()
+    }
+  }, [id])
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     )
-  if (!packageData)
+  }
+
+  if (!packageData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <h2 className="text-2xl font-bold">Package not found.</h2>
@@ -49,6 +54,7 @@ const DetailedRoutine = () => {
         </Button>
       </div>
     )
+  }
 
   return (
     <div className="min-h-screen bg-white">
