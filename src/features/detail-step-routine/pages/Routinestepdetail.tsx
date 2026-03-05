@@ -1,27 +1,61 @@
 import { useEffect, useState } from 'react'
-import step1 from '../../../shared/assets/images/step1.png'
-import step2 from '../../../shared/assets/images/step2.png'
-import step3 from '../../../shared/assets/images/step3.png'
-import step4 from '../../../shared/assets/images/step4.png'
+import { useParams, useNavigate } from 'react-router-dom'
 
 import type { RoutineData } from '../types'
-import { mockRoutineDetail } from '../mock/routine-detail.mock'
-
-const defaultStepImages = [step1, step2, step3, step4]
+import { getRoutineStepDetail } from '../services/routine-step-detail.api'
+import { Loader2 } from 'lucide-react'
+import { toast } from '@/shared/hooks/use-toast'
 
 const RoutineStepDetail = () => {
+  const { stepId } = useParams<{ stepId: string }>()
+  const navigate = useNavigate()
+
   const [routineData, setRoutineData] = useState<RoutineData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setTimeout(() => {
-      setRoutineData(mockRoutineDetail.data)
-    }, 800)
-  }, [])
+    const fetchDetail = async () => {
+      if (!stepId) return
+      setIsLoading(true)
+      try {
+        const data = await getRoutineStepDetail(stepId)
+        if (data) {
+          setRoutineData(data)
+        } else {
+          toast({
+            title: 'Not found',
+            description: 'Routine step not found.',
+            variant: 'destructive'
+          })
+          navigate('/daily-routine')
+        }
+      } catch (err) {
+        console.error(err)
+        toast({
+          title: 'Error',
+          description: 'Unable to load routine step.',
+          variant: 'destructive'
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDetail()
+  }, [stepId, navigate])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      </div>
+    )
+  }
 
   if (!routineData) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading routine detail...
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="text-gray-500">Routine detail unavailable.</p>
       </div>
     )
   }
@@ -49,11 +83,17 @@ const RoutineStepDetail = () => {
 
           {/* Breadcrumb */}
           <nav className="flex items-center justify-center gap-2 text-xs md:text-sm">
-            <span className="text-gray-600 hover:text-blue-500 cursor-pointer transition-colors">
+            <span
+              className="text-gray-600 hover:text-blue-500 cursor-pointer transition-colors"
+              onClick={() => navigate('/')}
+            >
               Home
             </span>
             <span className="text-gray-400">/</span>
-            <span className="text-gray-600 hover:text-blue-500 cursor-pointer transition-colors">
+            <span
+              className="text-gray-600 hover:text-blue-500 cursor-pointer transition-colors"
+              onClick={() => navigate('/daily-routine')}
+            >
               Routine
             </span>
             <span className="text-gray-400">/</span>
@@ -78,8 +118,8 @@ const RoutineStepDetail = () => {
                 <div className="relative bg-gradient-to-br from-blue-100 to-blue-50 rounded-3xl overflow-hidden shadow-sm p-4 transition-all duration-300 hover:shadow-lg">
                   <div className="bg-white rounded-2xl overflow-hidden">
                     <img
-                      src={defaultStepImages[index] || step1}
-                      alt={step.instruction}
+                      src={step.image_url}
+                      alt={step.title}
                       className="w-full aspect-square object-cover transition-transform duration-300 hover:scale-105"
                     />
                   </div>
@@ -92,18 +132,14 @@ const RoutineStepDetail = () => {
                   {/* STEP HEADER */}
                   <div className="inline-flex items-center gap-3 bg-blue-100 rounded-full px-4 py-2 mb-4">
                     <div className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                      {step.order}
+                      {step.order || index + 1}
                     </div>
 
-                    <h3 className="text-sm md:text-base font-bold text-blue-400">
-                      {step.instruction}
-                    </h3>
+                    <h3 className="text-sm md:text-base font-bold text-blue-400">{step.title}</h3>
                   </div>
 
                   {/* DESCRIPTION */}
-                  <p className="text-gray-700 leading-relaxed text-xs md:text-sm">
-                    {step.description}
-                  </p>
+                  <p className="text-gray-700 leading-relaxed text-xs md:text-sm">{step.how_to}</p>
                 </div>
               </div>
             </div>

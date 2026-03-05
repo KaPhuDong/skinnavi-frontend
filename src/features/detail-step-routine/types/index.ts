@@ -1,8 +1,9 @@
 export interface SubStep {
   id: string
-  order: number
-  instruction: string
-  description: string
+  order?: number
+  title: string
+  how_to: string
+  image_url: string
 }
 
 export interface Product {
