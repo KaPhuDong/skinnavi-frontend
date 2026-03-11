@@ -25,7 +25,7 @@ const teamMembers = [
     github: "https://github.com/KaPhuDong"
   },
   { 
-    name: "Bho Hnuoc Thi Hoai Tien", 
+    name: "Bho Nuoch Thi Hoai Tien", 
     role: "Frontend Developer", 
     image: TienImg,
     github: "https://github.com/HoaiTien05"
