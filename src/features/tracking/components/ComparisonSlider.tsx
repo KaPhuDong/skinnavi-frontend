@@ -499,11 +499,7 @@ export const ComparisonSlider = ({ tracking }: ComparisonSliderProps) => {
           <p style={{ color: '#15803d', fontSize: 13, fontWeight: 700 }}>
             {scoreImprovement > 0 ? '+' : ''}
             {scoreImprovement}%
-            {scoreImprovement === 0
-              ? ' (no change)'
-              : scoreImprovement > 0
-                ? ' improved'
-                : ' declined'}
+            {scoreImprovement === 0 ? ' stable' : scoreImprovement > 0 ? ' improved' : ' declined'}
           </p>
         </div>
         <div
@@ -531,7 +527,7 @@ export const ComparisonSlider = ({ tracking }: ComparisonSliderProps) => {
               ? `${formatMetricName(keyChangeMetric.metric_type)} ${
                   keyChangeMetric.difference > 0 ? '+' : ''
                 }${keyChangeMetric.difference}`
-              : 'No data'}
+              : 'No change'}
           </p>
         </div>
       </div>
