@@ -11,10 +11,7 @@ export type HealthDataItem = {
   date?: string
 }
 
-const defaultData: HealthDataItem[] = [
-  { label: 'Day 1', score: 70, pores: 72, acnes: 74, darkCircles: 62, darkPots: 70 },
-  { label: 'Day 2', score: 87, pores: 88, acnes: 79, darkCircles: 65, darkPots: 79 }
-]
+const defaultData: HealthDataItem[] = []
 
 const DATE_OPTIONS = [
   { value: '7d', label: 'Last 7 days' },
@@ -23,72 +20,73 @@ const DATE_OPTIONS = [
   { value: 'all', label: 'All time' }
 ]
 
-const MAX_POINTS = 5
-
-function pickTopChanges(pool: HealthDataItem[], n: number): HealthDataItem[] {
-  if (pool.length <= n) return pool
-  const importance = pool.map((d, i) => {
-    const prev = i > 0 ? Math.abs(d.score - pool[i - 1].score) : 0
-    const next = i < pool.length - 1 ? Math.abs(d.score - pool[i + 1].score) : 0
-    return { idx: i, val: Math.max(prev, next) }
-  })
-  const kept = new Set<number>([0, pool.length - 1])
-  importance
-    .filter((x) => x.idx !== 0 && x.idx !== pool.length - 1)
-    .sort((a, b) => b.val - a.val)
-    .slice(0, n - 2)
-    .forEach((x) => kept.add(x.idx))
-  return pool.filter((_, i) => kept.has(i))
+const DAYS_MAP: Record<string, number | undefined> = {
+  '7d': 7,
+  '30d': 30,
+  '3m': 90,
+  all: 1000
 }
 
-function filterByDays(data: HealthDataItem[], days: number): HealthDataItem[] {
-  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
-  return data.filter((d) => {
-    if (!d.date) return true
-    return new Date(d.date).getTime() >= cutoff
-  })
-}
+const MIN_POINT_WIDTH = 48
 
-export default function HealthProgress({ data = defaultData }: { data?: HealthDataItem[] }) {
+export default function HealthProgress({
+  data = defaultData,
+  onDateFilterChange
+}: {
+  data?: HealthDataItem[]
+  onDateFilterChange?: (days: number | undefined) => void
+}) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const svgContainerRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [dateFilter, setDateFilter] = useState('7d')
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
+  const handleDateFilterChange = (value: string) => {
+    setDateFilter(value)
+    if (onDateFilterChange) {
+      onDateFilterChange(DAYS_MAP[value])
+    }
+  }
+
   const displayData = useMemo<HealthDataItem[]>(() => {
-    const sorted = [...data].sort((a, b) => {
+    return [...data].sort((a, b) => {
       if (!a.date || !b.date) return 0
       return new Date(a.date).getTime() - new Date(b.date).getTime()
     })
-    if (dateFilter === 'all') return pickTopChanges(sorted, MAX_POINTS)
-    const hasDates = sorted.some((d) => !!d.date)
-    if (!hasDates) return sorted.slice(-MAX_POINTS)
-    const days = dateFilter === '7d' ? 7 : dateFilter === '30d' ? 30 : 90
-    const inRange = filterByDays(sorted, days)
-    if (inRange.length === 0) return sorted.slice(-MAX_POINTS)
-    return pickTopChanges(inRange, MAX_POINTS)
-  }, [data, dateFilter])
+  }, [data])
 
-  const W = 100
-  const H = 100
-  const pad = { left: 8, right: 6, top: 10, bottom: 6 }
   const n = displayData.length
 
-  const xScale = (i: number) =>
-    n === 1
-      ? (W - pad.left - pad.right) / 2 + pad.left
-      : pad.left + (i / (n - 1)) * (W - pad.left - pad.right)
+  const CHART_HEIGHT = 180
+  const LABEL_HEIGHT = 36 
+  const SCROLLBAR_SPACE = 8 
+  const Y_AXIS_WIDTH = 32
 
-  const yScale = (s: number) => pad.top + (1 - s / 100) * (H - pad.top - pad.bottom)
+  const minContentWidth = Math.max(n * MIN_POINT_WIDTH, 300)
+
+  const padL = 12
+  const padR = 20
+  const padT = 14 
+  const padB = 6
+
+  const svgW = minContentWidth
+  const svgH = CHART_HEIGHT
+
+  const xScale = (i: number) =>
+    n === 1 ? (svgW - padL - padR) / 2 + padL : padL + (i / (n - 1)) * (svgW - padL - padR)
+
+  const yScale = (s: number) => padT + (1 - s / 100) * (svgH - padT - padB)
 
   const linePath = displayData
     .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i)} ${yScale(d.score)}`)
     .join(' ')
 
-  const areaPath = `${linePath} L ${xScale(n - 1)} ${H - pad.bottom} L ${xScale(0)} ${H - pad.bottom} Z`
+  const areaPath =
+    n > 0 ? `${linePath} L ${xScale(n - 1)} ${svgH - padB} L ${xScale(0)} ${svgH - padB} Z` : ''
 
-  const latestScore = displayData[displayData.length - 1].score
+  const latestScore = displayData[displayData.length - 1]?.score ?? 0
 
   const metrics = (d: HealthDataItem) => [
     { label: 'Pores', value: d.pores, color: '#8b5cf6' },
@@ -97,17 +95,18 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
     { label: 'Dark spots', value: d.darkPots, color: '#f59e0b' }
   ]
 
-  const TOOLTIP_W = 148
+  
+  const TOOLTIP_W = 160
+  const TOOLTIP_H = 124
 
   const handleMouseEnter = (i: number, score: number) => {
-    const el = svgContainerRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
+    const scrollEl = scrollContainerRef.current
+    const scrollLeft = scrollEl ? scrollEl.scrollLeft : 0
+    const xPx = xScale(i)
+    const yPx = yScale(score)
+    const xInView = xPx - scrollLeft
     setHoveredIdx(i)
-    setTooltipPos({
-      x: (xScale(i) / W) * rect.width,
-      y: (yScale(score) / H) * rect.height
-    })
+    setTooltipPos({ x: xInView, y: yPx })
   }
 
   const selectedLabel = DATE_OPTIONS.find((o) => o.value === dateFilter)?.label ?? 'Last 7 days'
@@ -117,7 +116,6 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
       className="bg-white rounded-2xl shadow-sm border border-slate-100"
       style={{ padding: '20px 20px 16px' }}
     >
-      {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <p style={{ fontWeight: 700, color: '#1e293b', fontSize: 16, marginBottom: 2 }}>
@@ -127,7 +125,6 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Date filter dropdown */}
           <div style={{ position: 'relative', userSelect: 'none' }}>
             <button
               type="button"
@@ -182,7 +179,7 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
                     <div
                       key={opt.value}
                       onClick={() => {
-                        setDateFilter(opt.value)
+                        handleDateFilterChange(opt.value)
                         setDropdownOpen(false)
                       }}
                       style={{
@@ -216,7 +213,6 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
             )}
           </div>
 
-          {/* Score badge */}
           <div
             style={{
               background: '#f0fdf4',
@@ -238,21 +234,20 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
         </div>
       </div>
 
-      {/* Chart */}
-      <div style={{ position: 'relative', height: 210 }}>
-        {/* Y-axis labels */}
+
+      <div style={{ display: 'flex', position: 'relative' }}>
         <div
           style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 24,
-            width: 26,
+            flexShrink: 0,
+            width: Y_AXIS_WIDTH,
+            height: CHART_HEIGHT,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
             alignItems: 'flex-end',
-            paddingRight: 4
+            paddingRight: 6,
+            paddingTop: padT,
+            paddingBottom: padB
           }}
         >
           {[100, 75, 50, 25, 0].map((v) => (
@@ -262,189 +257,226 @@ export default function HealthProgress({ data = defaultData }: { data?: HealthDa
           ))}
         </div>
 
-        <div
-          ref={svgContainerRef}
-          style={{ position: 'absolute', left: 28, right: 0, top: 0, bottom: 24 }}
-        >
-          <svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${W} ${H}`}
-            preserveAspectRatio="none"
-            style={{ overflow: 'visible', display: 'block' }}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <div
+            ref={scrollContainerRef}
+            style={{
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              paddingBottom: SCROLLBAR_SPACE,
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#c4b5fd #f1f5f9'
+            }}
+            onMouseLeave={() => setHoveredIdx(null)}
           >
-            <defs>
-              <linearGradient id="violetGrad2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.01" />
-              </linearGradient>
-            </defs>
-
-            {[0, 25, 50, 75, 100].map((v) => (
-              <line
-                key={v}
-                x1={pad.left}
-                y1={yScale(v)}
-                x2={W - pad.right}
-                y2={yScale(v)}
-                stroke="#f1f5f9"
-                strokeWidth="0.6"
-              />
-            ))}
-
-            <line
-              x1={pad.left}
-              y1={yScale(0)}
-              x2={W - pad.right + 2}
-              y2={yScale(0)}
-              stroke="#e2e8f0"
-              strokeWidth="0.6"
-            />
-            <polygon
-              points={`${W - pad.right + 2},${yScale(0) - 1.2} ${W - pad.right + 4},${yScale(0)} ${W - pad.right + 2},${yScale(0) + 1.2}`}
-              fill="#e2e8f0"
-            />
-
-            <path d={areaPath} fill="url(#violetGrad2)" />
-            <path
-              d={linePath}
-              fill="none"
-              stroke="#8b5cf6"
-              strokeWidth="0.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {displayData.map((d, i) => (
-              <g key={i}>
-                {/* Outer glow ring on hover */}
-                {hoveredIdx === i && (
-                  <circle
-                    cx={xScale(i)}
-                    cy={yScale(d.score)}
-                    r="3.5"
-                    fill="#8b5cf6"
-                    fillOpacity="0.15"
-                  />
-                )}
-                {/* Solid dot — no white fill */}
-                <circle
-                  cx={xScale(i)}
-                  cy={yScale(d.score)}
-                  r={hoveredIdx === i ? 2.0 : 1.4}
-                  fill="#8b5cf6"
-                />
-                {/* Hit area */}
-                <circle
-                  cx={xScale(i)}
-                  cy={yScale(d.score)}
-                  r="8"
-                  fill="transparent"
-                  style={{ cursor: 'pointer' }}
-                  onMouseEnter={() => handleMouseEnter(i, d.score)}
-                  onMouseLeave={() => setHoveredIdx(null)}
-                />
-              </g>
-            ))}
-          </svg>
-
-          {/* Tooltip */}
-          {hoveredIdx !== null &&
-            (() => {
-              const d = displayData[hoveredIdx]
-              const el = svgContainerRef.current
-              const containerW = el ? el.getBoundingClientRect().width : 340
-              const rawLeft = tooltipPos.x - TOOLTIP_W / 2
-              const left = Math.min(Math.max(rawLeft, 0), containerW - TOOLTIP_W)
-              const top = tooltipPos.y
-
-              return (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left,
-                    top,
-                    transform: 'translateY(calc(-100% - 10px))',
-                    width: TOOLTIP_W,
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 12,
-                    padding: '8px 10px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                    pointerEvents: 'none',
-                    zIndex: 20
-                  }}
+            <div style={{ width: minContentWidth, position: 'relative' }}>
+              <div
+                ref={svgContainerRef}
+                style={{ width: minContentWidth, height: CHART_HEIGHT, position: 'relative' }}
+              >
+                <svg
+                  width={svgW}
+                  height={svgH}
+                  viewBox={`0 0 ${svgW} ${svgH}`}
+                  style={{ display: 'block', overflow: 'visible' }}
                 >
-                  <p
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: '#374151',
-                      marginBottom: 6,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.07em'
-                    }}
-                  >
-                    {d.label}
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {metrics(d).map((m) => (
+                  <defs>
+                    <linearGradient id="violetGrad2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.18" />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.01" />
+                    </linearGradient>
+                  </defs>
+
+                  {[0, 25, 50, 75, 100].map((v) => (
+                    <line
+                      key={v}
+                      x1={padL}
+                      y1={yScale(v)}
+                      x2={svgW - padR}
+                      y2={yScale(v)}
+                      stroke="#f1f5f9"
+                      strokeWidth="0.6"
+                    />
+                  ))}
+
+                  <line
+                    x1={padL}
+                    y1={yScale(0)}
+                    x2={svgW - padR + 2}
+                    y2={yScale(0)}
+                    stroke="#e2e8f0"
+                    strokeWidth="0.6"
+                  />
+                  <polygon
+                    points={`${svgW - padR + 2},${yScale(0) - 1.2} ${svgW - padR + 4},${yScale(0)} ${svgW - padR + 2},${yScale(0) + 1.2}`}
+                    fill="#e2e8f0"
+                  />
+
+                  <path d={areaPath} fill="url(#violetGrad2)" />
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke="#8b5cf6"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {displayData.map((d, i) => (
+                    <g key={i}>
+                      {hoveredIdx === i && (
+                        <>
+                          <line
+                            x1={xScale(i)}
+                            y1={padT}
+                            x2={xScale(i)}
+                            y2={svgH - padB}
+                            stroke="#8b5cf6"
+                            strokeWidth="0.6"
+                            strokeDasharray="3,3"
+                            opacity={0.35}
+                          />
+                          <circle
+                            cx={xScale(i)}
+                            cy={yScale(d.score)}
+                            r="5"
+                            fill="#8b5cf6"
+                            fillOpacity="0.12"
+                          />
+                        </>
+                      )}
+                      <circle
+                        cx={xScale(i)}
+                        cy={yScale(d.score)}
+                        r={hoveredIdx === i ? 2.5 : 1.8}
+                        fill="#8b5cf6"
+                      />
+                      <circle
+                        cx={xScale(i)}
+                        cy={yScale(d.score)}
+                        r="10"
+                        fill="transparent"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={() => handleMouseEnter(i, d.score)}
+                      />
+                    </g>
+                  ))}
+                </svg>
+
+                {hoveredIdx !== null &&
+                  (() => {
+                    const d = displayData[hoveredIdx]
+                    const scrollEl = scrollContainerRef.current
+                    const viewportW = scrollEl ? scrollEl.clientWidth : 300
+
+                    const rawLeft = tooltipPos.x - TOOLTIP_W / 2
+                    const left = Math.min(Math.max(rawLeft, 0), viewportW - TOOLTIP_W)
+
+                    const showBelow = tooltipPos.y < TOOLTIP_H + 10
+                    const top = showBelow ? tooltipPos.y + 14 : tooltipPos.y - TOOLTIP_H - 10
+
+                    return (
                       <div
-                        key={m.label}
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center'
+                          position: 'sticky',
+                          left,
+                          top,
+                          marginTop: showBelow
+                            ? -(CHART_HEIGHT - tooltipPos.y - 14)
+                            : -(CHART_HEIGHT - tooltipPos.y + TOOLTIP_H + 10),
+                          width: TOOLTIP_W,
+                          background: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: 12,
+                          padding: '10px 12px',
+                          boxShadow: '0 6px 20px rgba(0,0,0,0.10)',
+                          pointerEvents: 'none',
+                          zIndex: 30
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <div
-                            style={{
-                              width: 7,
-                              height: 7,
-                              borderRadius: '50%',
-                              background: m.color,
-                              flexShrink: 0
-                            }}
-                          />
-                          <span style={{ fontSize: 11, color: '#6b7280' }}>{m.label}</span>
+                        <p
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            color: '#374151',
+                            marginBottom: 8,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.07em'
+                          }}
+                        >
+                          {d.label}
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                          {metrics(d).map((m) => (
+                            <div
+                              key={m.label}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <div
+                                  style={{
+                                    width: 7,
+                                    height: 7,
+                                    borderRadius: '50%',
+                                    background: m.color,
+                                    flexShrink: 0
+                                  }}
+                                />
+                                <span style={{ fontSize: 11, color: '#6b7280' }}>{m.label}</span>
+                              </div>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: '#1e293b' }}>
+                                {m.value}%
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#1e293b' }}>
-                          {m.value}%
-                        </span>
+                      </div>
+                    )
+                  })()}
+              </div>
+
+              <div
+                style={{
+                  width: minContentWidth,
+                  height: LABEL_HEIGHT,
+                  position: 'relative'
+                }}
+              >
+                {displayData.map((d, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      left: xScale(i),
+                      top: 8,
+                      transform: 'translateX(-50%)',
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {d.label.split(' ').map((part, pi) => (
+                      <div
+                        key={pi}
+                        style={{
+                          fontSize: 10,
+                          lineHeight: '14px',
+                          color: hoveredIdx === i ? '#8b5cf6' : '#94a3b8',
+                          fontWeight: hoveredIdx === i ? 600 : 400,
+                          transition: 'color 0.15s'
+                        }}
+                      >
+                        {part}
                       </div>
                     ))}
                   </div>
-                </div>
-              )
-            })()}
-        </div>
-
-        {/* X-axis labels */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 28,
-            right: 40,
-            bottom: 0,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-end'
-          }}
-        >
-          {displayData.map((d, i) => (
-            <span
-              key={i}
-              style={{
-                fontSize: 10,
-                color: hoveredIdx === i ? '#8b5cf6' : '#94a3b8',
-                fontWeight: hoveredIdx === i ? 600 : 400,
-                transition: 'color 0.15s'
-              }}
-            >
-              {d.label}
-            </span>
-          ))}
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

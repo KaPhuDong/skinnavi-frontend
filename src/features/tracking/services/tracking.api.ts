@@ -1,16 +1,9 @@
 import apiClient from '@/shared/lib/api-client'
-import type { TrackingOverview } from '../types'
+import type { TrackingOverview, SkinAnalysis, Routine, DailyLog, Metric } from '../types'
 
 export interface TrackingQueryParams {
   startDate?: string
   endDate?: string
-}
-
-export interface TrackingApiResponse {
-  statusCode: number
-  data: TrackingOverview
-  message: string
-  success: boolean
 }
 
 export interface SkinAnalysesResponse {
@@ -63,15 +56,10 @@ export interface CompareAnalysesRequest {
   analysisId2: string
 }
 
-export const getTrackingOverview = async (
-  params?: TrackingQueryParams
-): Promise<TrackingOverview> => {
-  const res = await apiClient.get<TrackingApiResponse>('/routines/tracking/overview', { params })
-  return res.data.data
-}
-
-export const getUserSkinAnalyses = async (): Promise<SkinAnalysesResponse['data']> => {
-  const res = await apiClient.get<SkinAnalysesResponse>('/routines/tracking/skin-analyses')
+export const getUserSkinAnalyses = async (days?: number): Promise<SkinAnalysesResponse['data']> => {
+  const res = await apiClient.get<SkinAnalysesResponse>('/routines/tracking/skin-analyses', {
+    params: days !== undefined ? { days } : undefined
+  })
   return res.data.data
 }
 
@@ -89,4 +77,4 @@ export const compareAnalyses = async (
   return res.data.data
 }
 
-export type { TrackingOverview, SkinAnalysis, Routine, DailyLog, Metric } from '../types'
+export type { TrackingOverview, SkinAnalysis, Routine, DailyLog, Metric }

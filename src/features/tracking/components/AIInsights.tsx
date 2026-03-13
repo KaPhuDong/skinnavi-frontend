@@ -1,4 +1,5 @@
 import { Sparkles, Star, ScanFace, Target, TrendingUp, ShieldCheck } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import type { TrackingOverview } from '../types'
 
 interface AIInsightsProps {
@@ -44,16 +45,14 @@ export const AIInsights = ({ tracking }: AIInsightsProps) => {
       Icon: ShieldCheck
     }
   ]
-
+  const navigate = useNavigate()
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 h-full flex flex-col">
-      {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Star size={17} color="#f59e0b" fill="#f59e0b" />
         <h3 className="font-bold text-slate-700 text-base">SkinNavi Highlights</h3>
       </div>
 
-      {/* Highlight cards */}
       <div className="space-y-3 flex-1">
         {highlights.map((item, i) => {
           const { Icon } = item
@@ -97,12 +96,17 @@ export const AIInsights = ({ tracking }: AIInsightsProps) => {
         })}
       </div>
 
-      {/* Action buttons */}
       <div className="mt-5 space-y-2">
-        <button className="w-full bg-blue-400 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+        <button
+          onClick={() => navigate('/analysis-result')}
+          className="w-full bg-blue-400 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
           <Sparkles className="w-3.5 h-3.5" /> Recommended Products
         </button>
-        <button className="w-full border border-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+        <button
+          onClick={() => navigate('/daily-routine')}
+          className="w-full border border-slate-200 text-slate-600 text-xs font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+        >
           View Full Routine
         </button>
       </div>

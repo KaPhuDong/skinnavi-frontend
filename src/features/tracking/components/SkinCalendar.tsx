@@ -7,11 +7,8 @@ interface SkinCalendarProps {
 }
 
 export const SkinCalendar = ({ tracking }: SkinCalendarProps) => {
-  // Use full "YYYY-MM-DD" keys so months don't bleed into each other
-  const completedDates = new Set<string>() // is_completed = true
-  const incompleteDates = new Set<string>() // is_completed = false
-
-  // ── derive "latest date" from data (original logic, untouched) ──────────────
+  const completedDates = new Set<string>() 
+  const incompleteDates = new Set<string>() 
   let maxDay = new Date().getDate()
   let dataMonth = new Date().getMonth() + 1
   let dataYear = new Date().getFullYear()
@@ -31,7 +28,6 @@ export const SkinCalendar = ({ tracking }: SkinCalendarProps) => {
           dataYear = year
         }
 
-        // Build full date key "YYYY-MM-DD"
         const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
         if (log.is_completed) {
@@ -45,7 +41,6 @@ export const SkinCalendar = ({ tracking }: SkinCalendarProps) => {
 
   const today = maxDay
 
-  // ── navigation state ─────────────────────────────────────────────────────────
   const [viewMonth, setViewMonth] = useState(dataMonth)
   const [viewYear, setViewYear] = useState(dataYear)
 
@@ -67,7 +62,6 @@ export const SkinCalendar = ({ tracking }: SkinCalendarProps) => {
     }
   }
 
-  // ── calendar grid ────────────────────────────────────────────────────────────
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const firstDay = new Date(viewYear, viewMonth - 1, 1).getDay()
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate()
@@ -78,7 +72,6 @@ export const SkinCalendar = ({ tracking }: SkinCalendarProps) => {
     { month: 'long' }
   )
 
-  // Build the full date key for the currently viewed month + given day
   const dateKey = (day: number) =>
     `${viewYear}-${String(viewMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
@@ -150,7 +143,6 @@ export const SkinCalendar = ({ tracking }: SkinCalendarProps) => {
         ))}
       </div>
 
-      {/* Legend */}
       <div className="flex items-center gap-4 mt-5 pt-4 border-t border-slate-100">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm bg-blue-400" />
