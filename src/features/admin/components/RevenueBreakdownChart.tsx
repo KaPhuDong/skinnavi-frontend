@@ -1,5 +1,4 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { revenueBreakdown as fallbackBreakdown } from '../data/dashboardData'
 import type { RevenueItem } from '../types'
 import type { AdminRevenueTotals } from '../types/stats'
 
@@ -23,7 +22,7 @@ const mapTotalsToData = (totals: AdminRevenueTotals): RevenueItem[] => {
 }
 
 const RevenueBreakdownChart = ({ totals }: RevenueBreakdownChartProps) => {
-  const revenueBreakdown: RevenueItem[] = totals ? mapTotalsToData(totals) : fallbackBreakdown
+  const revenueBreakdown: RevenueItem[] = totals ? mapTotalsToData(totals) : []
 
   return (
     <div className="bg-white rounded-2xl p-[22px] border border-gray-100 shadow-sm">
