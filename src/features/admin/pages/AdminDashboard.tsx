@@ -11,17 +11,13 @@ import {
   getAdminRevenueStats,
   getAdminUserStats
 } from '../services/admin.api'
-import type {
-  AdminActiveSubscriptions,
-  AdminRevenueStats,
-  AdminUserStats
-} from '../types/stats'
+import type { AdminActiveSubscriptions, AdminRevenueStats, AdminUserStats } from '../types/stats'
 
 const baseMetricStyles: Pick<Metric, 'bg' | 'iconColor'>[] = [
-  { bg: '#EEF3FF', iconColor: '#6B9CF6' }, // Total Users
-  { bg: '#EAFAF3', iconColor: '#34C98C' }, // Active Users
-  { bg: '#FFF7EC', iconColor: '#F6A73B' }, // Total Revenue
-  { bg: '#F0EEFF', iconColor: '#7C6FE4' } // Active Subscriptions
+  { bg: '#EEF3FF', iconColor: '#6B9CF6' },
+  { bg: '#EAFAF3', iconColor: '#34C98C' },
+  { bg: '#FFF7EC', iconColor: '#F6A73B' },
+  { bg: '#F0EEFF', iconColor: '#7C6FE4' }
 ]
 
 const AdminDashboard = () => {
@@ -93,7 +89,6 @@ const AdminDashboard = () => {
         <TopBar onMenuClick={() => setSidebarOpen(true)} />
 
         <div className="p-5 md:p-7 pb-10 flex-1">
-          {/* Header */}
           <div className="mb-6">
             <h1 className="text-xl md:text-[22px] font-bold text-gray-900">Dashboard Overview</h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -115,20 +110,17 @@ const AdminDashboard = () => {
 
           {!loading && !error && (
             <>
-              {/* Metric Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
                 {metrics.map((m) => (
                   <DashboardCard key={m.title} {...m} />
                 ))}
               </div>
 
-              {/* Charts Row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
                 <UserGrowthChart />
                 <RevenueBreakdownChart totals={revenue?.totals} />
               </div>
 
-              {/* Revenue Trends */}
               <RevenueTrendChart monthly={revenue?.monthly} />
             </>
           )}
