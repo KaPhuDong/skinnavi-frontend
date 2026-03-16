@@ -14,6 +14,7 @@ import RoutineStepDetail from './features/detail-step-routine/pages/RoutineStepD
 import AdminDashboard from './features/admin/pages/AdminDashboard'
 import PlaceholderPage from './features/admin/components/PlaceholderPage'
 import UserManagement from '@/features/admin/pages/UserManagement'
+import ProductManagement from '@/features/admin/pages/ProductManagement'
 
 function App() {
   return (
@@ -42,7 +43,7 @@ function App() {
         <Route path="/admin/users" element={<UserManagement />} />
         <Route path="/admin/subscriptions" element={<PlaceholderPage title="Subscriptions" />} />
         <Route path="/admin/revenue" element={<PlaceholderPage title="Revenue" />} />
-        <Route path="/admin/product" element={<PlaceholderPage title="Product" />} />
+        <Route path="/admin/product" element={<ProductManagement />} />
         <Route path="/admin/settings" element={<PlaceholderPage title="Settings" />} />
 
         {/* <Route path="/login" element={<LoginPage />} /> */}
