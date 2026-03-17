@@ -12,7 +12,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute'
 import DailyRoutine from './features/routine/pages/DailyRoutine'
 import RoutineStepDetail from './features/detail-step-routine/pages/RoutineStepDetail'
 import PaymentResult from './features/payment/pages/PaymentResult'
-
+import Profile from './features/profile/pages/Profile'
 function App() {
   return (
     <BrowserRouter>
@@ -35,6 +35,7 @@ function App() {
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
             <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
         </Route>
 
