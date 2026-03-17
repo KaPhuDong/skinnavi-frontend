@@ -45,14 +45,19 @@ const DailyRoutine = () => {
     setIsChecking(true)
 
     try {
-      const logsData = await getDailyLogs()
-      const routines = logsData.routines || []
-      setTrackingRoutines(routines)
+      if (!trackingRoutines || trackingRoutines.length === 0) {
+        toast({
+          title: 'No Routine Found',
+          description: 'You need to create a routine before you can check in.',
+          variant: 'destructive'
+        })
+        return
+      }
 
       const todayStr = toDateOnlyString(new Date())
       const targetTime = activeTab.toUpperCase()
 
-      const targetRoutine = routines.find((r) => r.routine_time === targetTime)
+      const targetRoutine = trackingRoutines.find((r) => r.routine_time === targetTime)
 
       const todayLog = targetRoutine?.daily_logs.find((log) => {
         const logDateStr = toDateOnlyString(new Date(log.log_date))
@@ -60,9 +65,25 @@ const DailyRoutine = () => {
       })
 
       if (!todayLog?.id) {
+        if (targetRoutine) {
+          const start = new Date(targetRoutine.subscription_start_date)
+          const end = new Date(targetRoutine.subscription_end_date)
+          const diffInDays = Math.round((end.getTime() - start.getTime()) / (1000 * 3600 * 24))
+
+          if (diffInDays <= 7) {
+            toast({
+              title: 'Upgrade Required',
+              description:
+                'The current plan does not support daily tracking. Please upgrade to a Standard or Premium plan to access this feature.',
+              variant: 'destructive'
+            })
+            return
+          }
+        }
+
         toast({
           title: 'Notice',
-          description: `No ${activeTab} routine schedule found for today.`,
+          description: `You do not have any ${activeTab} routine scheduled for today. Check back tomorrow!`,
           variant: 'destructive'
         })
         return
@@ -108,8 +129,7 @@ const DailyRoutine = () => {
         description: errorMessage,
         variant: 'destructive'
       })
-    }
-    {
+    } finally {
       setIsChecking(false)
     }
   }
@@ -126,11 +146,21 @@ const DailyRoutine = () => {
     setError(null)
 
     try {
-      const routinesData = await getUserRoutines()
+      const [routinesData, logsData] = await Promise.all([getUserRoutines(), getDailyLogs()])
+
       setRoutines(routinesData)
-    } catch (err) {
+      setTrackingRoutines(logsData.routines || [])
+    } catch (err: unknown) {
       console.error('Error fetching data:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load routine data')
+
+      const apiMessage = (err as { response?: { data?: ApiErrorResponse } })?.response?.data
+        ?.message
+
+      const errorMessage = Array.isArray(apiMessage)
+        ? apiMessage.join(', ')
+        : apiMessage || 'Failed to load data'
+
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
