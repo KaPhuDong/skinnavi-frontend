@@ -14,6 +14,8 @@ import RoutineStepDetail from './features/detail-step-routine/pages/RoutineStepD
 import AdminDashboard from './features/admin/pages/AdminDashboard'
 import PlaceholderPage from './features/admin/components/PlaceholderPage'
 import AdminSubscription from './features/admin/pages/AdminSubscription'
+import AboutPage from '@/features/about-us/pages/AboutUs'
+import PaymentResult from './features/payment/pages/PaymentResult'
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
 
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/payment-result" element={<PaymentResult />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
@@ -35,6 +38,7 @@ function App() {
             <Route path="/daily-routine" element={<DailyRoutine />} />
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
+            <Route path="/about" element={<AboutPage />} />
           </Route>
 
           <Route path="/dashboard" element={<AdminDashboard />} />
