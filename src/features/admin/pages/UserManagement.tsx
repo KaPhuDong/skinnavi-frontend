@@ -37,7 +37,7 @@ const UserManagement: React.FC = () => {
   // ✅ MAP DATA
   const mapToBackendPayload = (formData: FormData) => ({
     email: formData.get('email') as string,
-    passwordHash: formData.get('password') as string,
+    password: formData.get('password') as string,
     fullName: formData.get('fullName') as string,
     role: (formData.get('role') as string).toUpperCase() as 'ADMIN' | 'USER',
   });
@@ -68,7 +68,7 @@ const UserManagement: React.FC = () => {
     } catch (error: any) {
       console.error('Create User Error:', error);
       toast({
-        title: 'Error',
+        title: 'Failed to Create User',
         description:
           error.response?.data?.message ||
           'Failed to create user. Please check your data.',
@@ -183,12 +183,12 @@ const UserManagement: React.FC = () => {
               >
                 <div>
                   <label className={labelClass}>Full Name</label>
-                  <input name="fullName" required placeholder="John Doe" className={inputClass} />
+                  <input name="fullName" required placeholder="Enter full name" className={inputClass} />
                 </div>
 
                 <div>
                   <label className={labelClass}>Email Address</label>
-                  <input name="email" required type="email" placeholder="john@example.com" className={inputClass} />
+                  <input name="email" required type="email" placeholder="Enter email address" className={inputClass} />
                 </div>
 
                 <div className="relative">
@@ -212,8 +212,8 @@ const UserManagement: React.FC = () => {
                 <div>
                   <label className={labelClass}>Assign Role</label>
                   <select name="role" className={inputClass}>
-                    <option value="User">User Account</option>
-                    <option value="Admin">Administrator</option>
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
                   </select>
                 </div>
 

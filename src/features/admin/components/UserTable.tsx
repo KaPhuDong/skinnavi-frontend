@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Eye, Trash2, Loader2, ShieldCheck, User as UserIcon, Edit3 } from 'lucide-react';
 import type { UserAPI, UserTableProps } from '../types/user';
 import { getAdminUsers, updateAdminUserRole, deleteAdminUser } from '../services/user.api';
+// Giả sử bạn có hàm này trong service, nếu chưa có hãy bổ sung nhé
+// import { getSubscriptionPlans } from '../services/subscription.api'; 
 import { toast } from '@/shared/hooks/use-toast';
 
 const THEME = {
@@ -13,21 +15,22 @@ const THEME = {
   purple: '#8B5CF6',
 };
 
-// Pastel Colors cho Avatar và Plan
 const PASTEL_COLORS = [
-  { bg: '#E0F2FE', text: '#0369A1' }, // Blue
-  { bg: '#DCFCE7', text: '#15803D' }, // Green
-  { bg: '#FEF3C7', text: '#B45309' }, // Amber
-  { bg: '#F3E8FF', text: '#7E22CE' }, // Purple
-  { bg: '#FFE4E6', text: '#BE123C' }, // Rose
+  { bg: '#E0F2FE', text: '#0369A1' }, // Blue - Sky
+  { bg: '#F0FDF4', text: '#166534' }, // Green - Mint
+  { bg: '#FEF9C3', text: '#854D0E' }, // Yellow - Amber
+  { bg: '#FAF5FF', text: '#6B21A8' }, // Purple - Lavender
+  { bg: '#FFF1F2', text: '#9F1239' }, // Rose - Pink
+  { bg: '#ECFEFF', text: '#0891B2' }, // Cyan - Ocean
+  { bg: '#F5F3FF', text: '#5B21B6' }, // Indigo - Violet
+  { bg: '#FFF7ED', text: '#9A3412' }, // Orange - Sunset
 ];
 
-// Mapping màu Pastel cho Plan
-const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
-  'Advanced': { bg: '#E8DEFF', text: '#6B3DBF' },
-  'Essential': { bg: '#DDEEFF', text: '#2A7DD4' },
-  'Starter': { bg: '#D6F0E8', text: '#1A8C60' },
-  'No Plan': { bg: '#F3F4F6', text: '#6B7280' },
+// Hàm helper để map màu dựa trên String (cho Plan Name)
+const getPlanColor = (planName: string) => {
+  if (!planName || planName === 'No Plan') return { bg: '#F3F4F6', text: '#6B7280' };
+  const hash = planName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PASTEL_COLORS[hash % PASTEL_COLORS.length];
 };
 
 const formatDate = (dateStr: string | null) => 
@@ -41,21 +44,19 @@ const UserTable: React.FC<UserTableProps> = ({ currentPage, itemsPerPage, onData
   const [modal, setModal] = useState<{ type: 'view' | 'delete' | 'editRole' | null, user: UserAPI | null }>({ type: null, user: null });
   const [actionLoading, setActionLoading] = useState(false);
 
-const fetchUsers = useCallback(async () => {
-  setIsLoading(true);
-  try {
-    const data = await getAdminUsers(currentPage || 1, itemsPerPage);
-    setUsers(data.items);
-    
-    onDataLoaded?.(data.pagination.total); 
-    
-  } catch (error) {
-    console.error('Failed to fetch users:', error);
-    toast({ title: 'Error', description: 'Failed to load users list.', variant: 'destructive' });
-  } finally {
-    setIsLoading(false);
-  }
-}, [currentPage, itemsPerPage, onDataLoaded]);
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await getAdminUsers(currentPage || 1, itemsPerPage);
+      setUsers(data.items);
+      onDataLoaded?.(data.pagination.total); 
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      toast({ title: 'Error', description: 'Failed to load users list.', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, itemsPerPage, onDataLoaded]);
 
   useEffect(() => {
     fetchUsers();
@@ -74,12 +75,12 @@ const fetchUsers = useCallback(async () => {
         const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
         await updateAdminUserRole(user.id, newRole);
         setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
-        toast({ title: 'Success', description: `Updated ${user.fullName} to ${newRole} successfully.`, variant: 'success' });
+        toast({ title: 'Role Updated', description: `Updated ${user.fullName} to ${newRole} successfully.`, variant: 'success' });
       } 
       else if (type === 'delete') {
         await deleteAdminUser(user.id);
         setUsers(prev => prev.filter(u => u.id !== user.id));
-        toast({ title: 'Success', description: `User ${user.fullName} has been deleted.`, variant: 'success' });
+        toast({ title: 'User Deleted', description: `User ${user.fullName} has been removed from the system.`, variant: 'success' });
       }
     } catch (error) {
       console.error("Action error:", error);
@@ -139,7 +140,8 @@ const fetchUsers = useCallback(async () => {
 const UserRow = ({ user, index, onAction }: { user: UserAPI, index: number, onAction: (type: any) => void }) => {
   const isAdmin = user.role === 'ADMIN';
   const planName = user.subscription?.packageName || 'No Plan';
-  const planColor = PLAN_COLORS[planName] || PLAN_COLORS['No Plan'];
+  
+  const planColor = useMemo(() => getPlanColor(planName), [planName]);
   
   const avatarStyle = useMemo(() => {
     const charCodeSum = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -207,7 +209,7 @@ const Modal = ({ type, user, loading, onClose, onConfirm }: any) => {
   const isEdit = type === 'editRole';
   
   const config = {
-    view: { icon: <Eye size={22} strokeWidth={2} />, color: THEME.primary, bg: THEME.bgLight, title: 'User Details', btn: 'Close' },
+    view: { icon: <UserIcon size={22} strokeWidth={2} />, color: THEME.primary, bg: THEME.bgLight, title: 'User Details', btn: 'Close' },
     delete: { icon: <Trash2 size={22} strokeWidth={2} />, color: THEME.danger, bg: '#FEE2E2', title: 'Delete User', btn: 'Confirm' },
     editRole: { icon: <Edit3 size={22} strokeWidth={2} />, color: THEME.primary, bg: '#E0F2FE', title: 'Change Role', btn: 'Update Role' }
   }[type as 'view' | 'delete' | 'editRole'];
@@ -217,7 +219,6 @@ const Modal = ({ type, user, loading, onClose, onConfirm }: any) => {
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-[2px]" 
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      {/* Container Modal - Đã bỏ class animation */}
       <div className="bg-white rounded-2xl w-[90%] max-w-[380px] shadow-2xl overflow-hidden">
         <div className="p-6 pb-2 text-center">
           <div style={{ background: config.bg, color: config.color }} className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -225,7 +226,6 @@ const Modal = ({ type, user, loading, onClose, onConfirm }: any) => {
           </div>
           <h3 className="text-lg font-bold text-gray-900">{config.title}</h3>
         </div>
-
         <div className="p-6 pt-2">
           {isView ? (
             <div className="text-[13px] space-y-1">
@@ -246,7 +246,6 @@ const Modal = ({ type, user, loading, onClose, onConfirm }: any) => {
               </p>
             </div>
           )}
-
           <div className="flex gap-3 mt-4">
             {!isView && <button disabled={loading} onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-600 font-bold text-sm hover:bg-gray-200 transition-all">Cancel</button>}
             <button disabled={loading} onClick={isView ? onClose : onConfirm} style={{ background: config.color }} className="flex-1 py-2.5 rounded-xl text-white font-bold text-sm shadow-md hover:brightness-105 transition-all">
