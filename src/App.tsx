@@ -14,6 +14,9 @@ import RoutineStepDetail from './features/detail-step-routine/pages/RoutineStepD
 import AdminDashboard from './features/admin/pages/AdminDashboard'
 import PlaceholderPage from './features/admin/components/PlaceholderPage'
 import AdminRevenue from './features/admin/pages/AdminRevenue'
+import AboutPage from '@/features/about-us/pages/AboutUs'
+import PaymentResult from './features/payment/pages/PaymentResult'
+import UserManagement from '@/features/user-management/pages/UserManagement'
 
 function App() {
   return (
@@ -27,6 +30,7 @@ function App() {
 
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/payment-result" element={<PaymentResult />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
@@ -35,16 +39,18 @@ function App() {
             <Route path="/daily-routine" element={<DailyRoutine />} />
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
+            <Route path="/about" element={<AboutPage />} />
           </Route>
 
           <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="/users" element={<PlaceholderPage title="Users" />} />
+          <Route path="/users" element={<UserManagement />} />
           <Route path="/subscriptions" element={<PlaceholderPage title="Subscriptions" />} />
           <Route path="/revenue" element={<AdminRevenue />} />
           <Route path="/product" element={<PlaceholderPage title="Product" />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
         </Route>
 
+        {/* Route 404 - Not Found */}
         <Route
           path="*"
           element={
