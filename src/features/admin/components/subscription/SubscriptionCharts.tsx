@@ -13,8 +13,6 @@ import {
   type MonthlyRevenueRow,
 } from '../../services/subscriptionApi'
 
-// Conversion Rate Trend vẫn hardcode vì chưa có endpoint analytics
-// TODO: Thay bằng /admin/analytics/conversion-trend khi backend cung cấp
 const FALLBACK_TREND_DATA = [
   { month: 'Jan', rate: 14 },
   { month: 'Feb', rate: 17 },
@@ -40,8 +38,6 @@ interface TrendRow {
   rate: number
 }
 
-// Chuyển monthly revenue → trend line (dùng total revenue theo tháng làm proxy
-// cho đến khi có endpoint conversion riêng)
 const buildRevenueTrend = (monthly: MonthlyRevenueRow[]): TrendRow[] => {
   const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   return monthly.slice(-6).map((row) => {
@@ -65,7 +61,6 @@ const SubscriptionCharts = () => {
       getSubscriptionPackages(),
       getRevenueStats(),
     ]).then(([activeRes, packagesRes, revenueRes]) => {
-      // ── Donut: ghép byPackage với tên package ──────────────────────────────
       if (activeRes.status === 'fulfilled' && packagesRes.status === 'fulfilled') {
         const active: ActiveSubscriptionsResponse = activeRes.value
         const packages: PackageFromApi[] = packagesRes.value
@@ -77,14 +72,8 @@ const SubscriptionCharts = () => {
           value: bp.activeSubscriptions,
           color: SLICE_COLORS[i % SLICE_COLORS.length],
         }))
-
-        // Tính expired/cancelled nếu tổng byPackage < activeSubscriptions
-        // (byPackage chỉ chứa active → không cần thêm slice Expired ở đây,
-        //  nhưng nếu API trả thêm expired trong tương lai thì bổ sung vào đây)
         setStatusData(slices.length > 0 ? slices : [])
       }
-
-      // ── Line: dùng revenue theo tháng nếu không có conversion endpoint ────
       if (revenueRes.status === 'fulfilled') {
         const rev = revenueRes.value
         if (rev.monthly && rev.monthly.length > 0) {
@@ -106,7 +95,6 @@ const SubscriptionCharts = () => {
       transition={{ delay: 0.1 }}
       className="grid grid-cols-1 lg:grid-cols-2 gap-4"
     >
-      {/* ── Donut Chart ──────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-5">Subscription Status</h3>
 
@@ -148,7 +136,6 @@ const SubscriptionCharts = () => {
               </div>
             </div>
 
-            {/* Legend – cuộn nếu nhiều package */}
             <div className="flex sm:flex-col flex-row flex-wrap justify-around sm:justify-start gap-x-2 sm:gap-x-0 gap-y-3 flex-1 w-full max-h-[160px] overflow-y-auto pr-1">
               {statusData.map((d) => (
                 <div
@@ -169,7 +156,6 @@ const SubscriptionCharts = () => {
         )}
       </div>
 
-      {/* ── Line Chart ───────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <h3 className="text-[15px] font-semibold text-gray-900 mb-5">{trendLabel}</h3>
 
