@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { MainLayout } from '@/shared/layouts/MainLayout'
 import Register from '@/features/auth/pages/Register'
 import Login from '@/features/auth/pages/Login'
@@ -12,6 +12,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute'
 import DailyRoutine from './features/routine/pages/DailyRoutine'
 import RoutineStepDetail from './features/detail-step-routine/pages/RoutineStepDetail'
 import PaymentResult from './features/payment/pages/PaymentResult'
+import AboutPage from '@/features/about-us/pages/AboutUs'
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
         </Route>
 
@@ -34,7 +35,7 @@ function App() {
             <Route path="/daily-routine" element={<DailyRoutine />} />
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
-            <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/about" element={<AboutPage />} />
           </Route>
         </Route>
 
