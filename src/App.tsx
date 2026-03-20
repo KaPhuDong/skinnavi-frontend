@@ -29,7 +29,6 @@ function App() {
 
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/payment-result" element={<PaymentResult />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
@@ -38,6 +37,7 @@ function App() {
             <Route path="/daily-routine" element={<DailyRoutine />} />
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
+            <Route path="/payment-result" element={<PaymentResult />} />
             <Route path="/about" element={<AboutPage />} />
           </Route>
 
