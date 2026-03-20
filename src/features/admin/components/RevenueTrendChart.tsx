@@ -59,7 +59,7 @@ const RevenueTrendChart = ({ monthly }: RevenueTrendChartProps) => {
                 tick={{ fontSize: 11, fill: '#9ca3af' }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => `$${v.toLocaleString()}`}
+                tickFormatter={(v) => `${v.toLocaleString()}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend

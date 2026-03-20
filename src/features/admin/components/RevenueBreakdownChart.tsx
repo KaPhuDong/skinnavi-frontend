@@ -45,7 +45,7 @@ const RevenueBreakdownChart = ({ totals }: RevenueBreakdownChartProps) => {
                   <Cell key={entry.name ?? i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
+              <Tooltip formatter={(v: number) => `${v.toLocaleString()}`} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -58,7 +58,7 @@ const RevenueBreakdownChart = ({ totals }: RevenueBreakdownChartProps) => {
               </div>
               <div className="pl-[17px]">
                 <span className="text-sm font-bold text-gray-900">
-                  ${item.value.toLocaleString()}
+                  {item.value.toLocaleString()}
                 </span>
                 <span className="text-[11px] text-gray-400 ml-1.5">{item.pct}</span>
               </div>

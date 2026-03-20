@@ -62,7 +62,7 @@ const AdminDashboard = () => {
     const values = [
       totalUsers != null ? totalUsers.toLocaleString() : '—',
       activeUsers != null ? activeUsers.toLocaleString() : '—',
-      totalRevenue != null ? `$${totalRevenue.toLocaleString()}` : '—',
+      totalRevenue != null ? `${totalRevenue.toLocaleString()}` : '—',
       activeSubs != null ? activeSubs.toLocaleString() : '—'
     ]
 
