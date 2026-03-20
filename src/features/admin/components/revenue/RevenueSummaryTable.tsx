@@ -1,37 +1,42 @@
 import { motion } from 'framer-motion'
 import { TrendingUp } from 'lucide-react'
-
-const MONTHLY_DATA = [
-  { month: 'Jan', subscriptions: 45000, affiliateProducts: 12000 },
-  { month: 'Feb', subscriptions: 52000, affiliateProducts: 15000 },
-  { month: 'Mar', subscriptions: 61000, affiliateProducts: 18000 },
-  { month: 'Apr', subscriptions: 72000, affiliateProducts: 22000 },
-  { month: 'May', subscriptions: 85000, affiliateProducts: 26000 },
-  { month: 'Jun', subscriptions: 98000, affiliateProducts: 31000 }
-]
-
-const SUMMARY_ROWS = MONTHLY_DATA.map((d, i) => {
-  const total = d.subscriptions + d.affiliateProducts
-  const prevTotal =
-    i === 0 ? null : MONTHLY_DATA[i - 1].subscriptions + MONTHLY_DATA[i - 1].affiliateProducts
-  const growth = prevTotal ? (((total - prevTotal) / prevTotal) * 100).toFixed(1) : null
-  return {
-    month: `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i]} 2026`,
-    subscriptions: d.subscriptions,
-    affiliateProducts: d.affiliateProducts,
-    total,
-    growth
-  }
-})
+import type { AdminRevenueStats } from '../../services/admin.api'
 
 const fmt = (n: number) => {
-  if (n >= 1000) return `$${(n / 1000).toFixed(0)},000`
-  return `$${n}`
+  return `${n.toLocaleString('en-US')}`
 }
 
-const TABLE_HEADERS = ['Month', 'Subscriptions', 'Affiliate Products', 'Total Revenue', 'Growth']
+const TABLE_HEADERS = [
+  'Month',
+  'Subscriptions',
+  'Advertisement',
+  'Affiliate Products',
+  'Total Revenue',
+  'Growth'
+]
 
-const RevenueSummaryTable = () => {
+type RevenueSummaryTableProps = {
+  stats: AdminRevenueStats | null
+}
+
+const RevenueSummaryTable = ({ stats }: RevenueSummaryTableProps) => {
+  const summaryRows = (stats?.monthly ?? []).map((row, index, source) => {
+    const previousTotal = index > 0 ? source[index - 1].total : null
+    const growth =
+      previousTotal && previousTotal > 0
+        ? (((row.total - previousTotal) / previousTotal) * 100).toFixed(1)
+        : null
+
+    return {
+      month: row.month,
+      subscriptions: row.subscription,
+      advertisement: row.ads,
+      affiliateProducts: row.affiliate,
+      total: row.total,
+      growth
+    }
+  })
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -59,13 +64,16 @@ const RevenueSummaryTable = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {SUMMARY_ROWS.map((row) => (
+              {summaryRows.map((row) => (
                 <tr key={row.month} className="hover:bg-gray-50/60 transition-colors">
                   <td className="px-4 md:px-6 py-3.5 text-[12px] md:text-[13px] font-medium text-gray-700 whitespace-nowrap">
                     {row.month}
                   </td>
                   <td className="px-4 md:px-6 py-3.5 text-[12px] md:text-[13px] text-gray-600 whitespace-nowrap">
                     {fmt(row.subscriptions)}
+                  </td>
+                  <td className="px-4 md:px-6 py-3.5 text-[12px] md:text-[13px] text-gray-600 whitespace-nowrap">
+                    {fmt(row.advertisement)}
                   </td>
                   <td className="px-4 md:px-6 py-3.5 text-[12px] md:text-[13px] text-gray-600 whitespace-nowrap">
                     {fmt(row.affiliateProducts)}
@@ -80,11 +88,21 @@ const RevenueSummaryTable = () => {
                         {row.growth}%
                       </span>
                     ) : (
-                      <span className="text-gray-300 text-[13px]">—</span>
+                      <span className="text-gray-300 text-[13px]">-</span>
                     )}
                   </td>
                 </tr>
               ))}
+              {summaryRows.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-4 md:px-6 py-8 text-center text-[13px] text-gray-400"
+                  >
+                    No revenue data available for this period.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

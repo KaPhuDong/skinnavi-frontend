@@ -1,19 +1,16 @@
 import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-const MONTHLY_DATA = [
-  { month: 'Jan', subscriptions: 45000, affiliateProducts: 12000 },
-  { month: 'Feb', subscriptions: 52000, affiliateProducts: 15000 },
-  { month: 'Mar', subscriptions: 61000, affiliateProducts: 18000 },
-  { month: 'Apr', subscriptions: 72000, affiliateProducts: 22000 },
-  { month: 'May', subscriptions: 85000, affiliateProducts: 26000 },
-  { month: 'Jun', subscriptions: 98000, affiliateProducts: 31000 }
-]
+import type { AdminRevenueStats } from '../../services/admin.api'
 
 const LEGEND_ITEMS = [
+  { color: '#f97316', label: 'Advertisement' },
   { color: '#06b6d4', label: 'Affiliate Products' },
   { color: '#8b5cf6', label: 'Subscriptions' }
 ]
+
+type RevenueBreakdownChartProps = {
+  stats: AdminRevenueStats | null
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
@@ -26,14 +23,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <span className="w-2 h-2 rounded-full" style={{ background: p.fill }} />
             <span className="text-gray-500">{p.name}</span>
           </div>
-          <span className="font-semibold text-gray-800">${p.value.toLocaleString()}</span>
+          <span className="font-semibold text-gray-800">{p.value.toLocaleString()}</span>
         </div>
       ))}
     </div>
   )
 }
 
-const RevenueBreakdownChart = () => {
+const RevenueBreakdownChart = ({ stats }: RevenueBreakdownChartProps) => {
+  const monthlyData = (stats?.monthly ?? []).map((item) => ({
+    month: item.month,
+    subscriptions: item.subscription,
+    advertisement: item.ads,
+    affiliateProducts: item.affiliate
+  }))
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -43,12 +47,12 @@ const RevenueBreakdownChart = () => {
     >
       <h3 className="text-[15px] font-semibold text-gray-900">Monthly Revenue Breakdown</h3>
       <p className="text-[13px] text-gray-400 mt-0.5 mb-4">
-        Revenue by source over the last 6 months
+        Revenue by source across the selected period
       </p>
 
       <ResponsiveContainer width="100%" height={260}>
         <BarChart
-          data={MONTHLY_DATA}
+          data={monthlyData}
           margin={{ top: 5, right: 5, left: -10, bottom: 5 }}
           barCategoryGap="30%"
         >
@@ -67,6 +71,7 @@ const RevenueBreakdownChart = () => {
             tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f9fafb' }} />
+          <Bar dataKey="advertisement" name="Advertisement" stackId="a" fill="#f97316" />
           <Bar dataKey="affiliateProducts" name="Affiliate Products" stackId="a" fill="#06b6d4" />
           <Bar
             dataKey="subscriptions"
