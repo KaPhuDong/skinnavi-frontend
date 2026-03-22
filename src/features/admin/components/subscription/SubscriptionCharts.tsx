@@ -1,201 +1,207 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  PieChart, Pie, Cell, Tooltip as PieTooltip, ResponsiveContainer,
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip, Dot,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
 } from 'recharts'
 import {
-  getActiveSubscriptions,
-  getSubscriptionPackages,
-  getRevenueStats,
-  type ActiveSubscriptionsResponse,
-  type PackageFromApi,
-  type MonthlyRevenueRow,
+  getMonthlyConversionRate,
+  getSubscriptionStatusStats,
+  type MonthlyConversionRateEntry,
+  type SubscriptionStatusStat
 } from '../../services/subscriptionApi'
 
-const FALLBACK_TREND_DATA = [
-  { month: 'Jan', rate: 14 },
-  { month: 'Feb', rate: 17 },
-  { month: 'Mar', rate: 18 },
-  { month: 'Apr', rate: 22 },
-  { month: 'May', rate: 26 },
-  { month: 'Jun', rate: 29 },
-]
-
-const SLICE_COLORS = [
-  '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6',
-  '#ec4899', '#14b8a6', '#f97316', '#ef4444',
-]
-
-interface StatusSlice {
-  name: string
-  value: number
-  color: string
+const STATUS_COLORS: Record<string, string> = {
+  ACTIVE: '#22c55e',
+  EXPIRED: '#f59e0b',
+  CANCELLED: '#ef4444'
 }
 
-interface TrendRow {
-  month: string
-  rate: number
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Active',
+  EXPIRED: 'Expired',
+  CANCELLED: 'Cancelled'
 }
 
-const buildRevenueTrend = (monthly: MonthlyRevenueRow[]): TrendRow[] => {
-  const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  return monthly.slice(-6).map((row) => {
-    const [, mm] = row.month.split('-') // "YYYY-MM"
-    return {
-      month: MONTH_SHORT[parseInt(mm, 10) - 1] ?? row.month,
-      rate: row.total,
-    }
-  })
+const normalizeStatus = (status: string) => {
+  if (status === 'CANCELED') return 'CANCELLED'
+  return status
+}
+
+const formatMonth = (month: string) => {
+  const [year, monthIndex] = month.split('-').map(Number)
+  const date = new Date(year, (monthIndex ?? 1) - 1, 1)
+  return date.toLocaleString('en-US', { month: 'short' })
+}
+
+const LineTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-[12px]">
+      <p className="font-semibold text-gray-700 mb-2">{label}</p>
+      <div className="flex items-center justify-between gap-6 mb-1">
+        <span className="text-gray-500">Conversion Rate</span>
+        <span className="font-semibold text-gray-800">{payload[0].value}%</span>
+      </div>
+      <div className="text-gray-400">
+        {payload[0].payload.convertedUsers}/{payload[0].payload.totalUsers} users converted
+      </div>
+    </div>
+  )
+}
+
+const PieTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl shadow-lg p-3 text-[12px]">
+      <p className="font-semibold text-gray-700 mb-1">{payload[0].name}</p>
+      <p className="text-gray-800">{payload[0].value.toLocaleString()} subscriptions</p>
+    </div>
+  )
 }
 
 const SubscriptionCharts = () => {
-  const [statusData, setStatusData] = useState<StatusSlice[]>([])
-  const [trendData, setTrendData] = useState<TrendRow[]>(FALLBACK_TREND_DATA)
-  const [trendLabel, setTrendLabel] = useState('Conversion Rate Trend')
+  const [statusData, setStatusData] = useState<SubscriptionStatusStat[]>([])
+  const [monthlyConversion, setMonthlyConversion] = useState<MonthlyConversionRateEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.allSettled([
-      getActiveSubscriptions(),
-      getSubscriptionPackages(),
-      getRevenueStats(),
-    ]).then(([activeRes, packagesRes, revenueRes]) => {
-      if (activeRes.status === 'fulfilled' && packagesRes.status === 'fulfilled') {
-        const active: ActiveSubscriptionsResponse = activeRes.value
-        const packages: PackageFromApi[] = packagesRes.value
-
-        const pkgMap = new Map(packages.map((p) => [p.id, p.packageName]))
-
-        const slices: StatusSlice[] = active.byPackage.map((bp, i) => ({
-          name: pkgMap.get(bp.routinePackageId) ?? `Package ${i + 1}`,
-          value: bp.activeSubscriptions,
-          color: SLICE_COLORS[i % SLICE_COLORS.length],
-        }))
-        setStatusData(slices.length > 0 ? slices : [])
-      }
-      if (revenueRes.status === 'fulfilled') {
-        const rev = revenueRes.value
-        if (rev.monthly && rev.monthly.length > 0) {
-          setTrendData(buildRevenueTrend(rev.monthly))
-          setTrendLabel('Monthly Revenue Trend ($)')
+    Promise.allSettled([getSubscriptionStatusStats(), getMonthlyConversionRate()]).then(
+      ([statusRes, conversionRes]) => {
+        if (statusRes.status === 'fulfilled') {
+          setStatusData(statusRes.value)
         }
-      }
 
-      setLoading(false)
-    })
+        if (conversionRes.status === 'fulfilled') {
+          setMonthlyConversion(conversionRes.value)
+        }
+
+        setLoading(false)
+      }
+    )
   }, [])
 
-  const total = statusData.reduce((s, d) => s + d.value, 0)
+  const pieData = ['ACTIVE', 'EXPIRED', 'CANCELLED'].map((status) => {
+    const item = statusData.find((entry) => normalizeStatus(entry.status) === status)
+
+    return {
+      status,
+      name: STATUS_LABELS[status],
+      value: item?.count ?? 0,
+      fill: STATUS_COLORS[status]
+    }
+  })
+
+  const lineData = monthlyConversion.map((item) => ({
+    ...item,
+    label: formatMonth(item.month)
+  }))
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-    >
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-[15px] font-semibold text-gray-900 mb-5">Subscription Status</h3>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6"
+      >
+        <h3 className="text-[15px] font-semibold text-gray-900">Subscription Status</h3>
+        <p className="text-[13px] text-gray-400 mt-0.5 mb-4">
+          Active, expired, and cancelled subscriptions
+        </p>
 
         {loading ? (
-          <div className="flex items-center justify-center h-[180px]">
-            <div className="w-[140px] h-[140px] rounded-full border-4 border-gray-100 border-t-blue-400 animate-spin" />
-          </div>
-        ) : statusData.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-10">No data available</p>
+          <div className="h-[260px] rounded-xl bg-gray-50 animate-pulse" />
         ) : (
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="relative w-[150px] h-[150px] sm:w-[180px] sm:h-[180px] shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="58%"
-                    outerRadius="82%"
-                    paddingAngle={3}
-                    dataKey="value"
-                    startAngle={90}
-                    endAngle={-270}
-                  >
-                    {statusData.map((d, i) => (
-                      <Cell key={i} fill={d.color} strokeWidth={0} />
-                    ))}
-                  </Pie>
-                  <PieTooltip
-                    formatter={(v: number) => [v.toLocaleString(), '']}
-                    contentStyle={{ borderRadius: 10, border: '1px solid #f0f0f0', fontSize: 13 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-lg font-bold text-gray-900">{total.toLocaleString()}</span>
-                <span className="text-[11px] text-gray-400">Active</span>
-              </div>
-            </div>
-
-            <div className="flex sm:flex-col flex-row flex-wrap justify-around sm:justify-start gap-x-2 sm:gap-x-0 gap-y-3 flex-1 w-full max-h-[160px] overflow-y-auto pr-1">
-              {statusData.map((d) => (
-                <div
-                  key={d.name}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-center gap-1 sm:gap-2"
+          <>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={64}
+                  outerRadius={92}
+                  paddingAngle={3}
                 >
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-                    <span className="text-sm text-gray-600 whitespace-nowrap">{d.name}</span>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {d.value.toLocaleString()}
+                  {pieData.map((entry) => (
+                    <Cell key={entry.status} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
+              {pieData.map((item) => (
+                <div key={item.status} className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: item.fill }} />
+                  <span className="text-[12px] text-gray-500 font-medium">
+                    {item.name}: {item.value}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
+          </>
         )}
-      </div>
+      </motion.div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-[15px] font-semibold text-gray-900 mb-5">{trendLabel}</h3>
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.14 }}
+        className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6"
+      >
+        <h3 className="text-[15px] font-semibold text-gray-900">Conversion Rate Trend</h3>
+        <p className="text-[13px] text-gray-400 mt-0.5 mb-4">
+          Free to paid conversion by month
+        </p>
 
         {loading ? (
-          <div className="h-[200px] flex items-end gap-2 px-4 pb-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-gray-100 rounded animate-pulse"
-                style={{ height: `${30 + i * 12}%` }}
-              />
-            ))}
-          </div>
+          <div className="h-[260px] rounded-xl bg-gray-50 animate-pulse" />
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={trendData} margin={{ top: 5, right: 8, left: -22, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-              <LineTooltip
-                formatter={(v: number) => [
-                  trendLabel.includes('$') ? `$${v.toLocaleString()}` : `${v}%`,
-                  trendLabel,
-                ]}
-                contentStyle={{ borderRadius: 10, border: '1px solid #f0f0f0', fontSize: 13 }}
-                cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={lineData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                axisLine={false}
+                tickLine={false}
               />
+              <YAxis
+                tick={{ fontSize: 11, fill: '#9ca3af' }}
+                axisLine={false}
+                tickLine={false}
+                width={42}
+                domain={[0, 100]}
+                tickFormatter={(value) => `${value}%`}
+              />
+              <Tooltip content={<LineTooltip />} />
               <Line
                 type="monotone"
-                dataKey="rate"
-                stroke="#3b82f6"
-                strokeWidth={2.5}
-                dot={<Dot r={5} fill="#3b82f6" stroke="#fff" strokeWidth={2} />}
-                activeDot={{ r: 7, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                dataKey="conversionRate"
+                name="Conversion Rate"
+                stroke="#ec4899"
+                strokeWidth={3}
+                dot={{ r: 4, fill: '#ec4899' }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
         )}
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   )
 }
 

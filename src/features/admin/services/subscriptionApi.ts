@@ -1,7 +1,5 @@
 import apiClient from '@/shared/lib/api-client'
 
-// ─── Subscription Types ───────────────────────────────────────────────────────
-
 export interface PackageFromApi {
   id: string
   packageName: string
@@ -32,10 +30,8 @@ export interface CreatePackageBody {
 
 export type UpdatePackageBody = Partial<CreatePackageBody>
 
-// ─── Revenue Types ────────────────────────────────────────────────────────────
-
 export interface MonthlyRevenueRow {
-  month: string // "YYYY-MM"
+  month: string
   subscription: number
   ads: number
   affiliate: number
@@ -62,7 +58,23 @@ export interface RevenueStatsParams {
   tz?: string
 }
 
-// ─── Subscription API ─────────────────────────────────────────────────────────
+export interface ConversionRateResponse {
+  totalUsers: number
+  convertedUsers: number
+  conversionRate: number
+}
+
+export interface MonthlyConversionRateEntry {
+  month: string
+  totalUsers: number
+  convertedUsers: number
+  conversionRate: number
+}
+
+export interface SubscriptionStatusStat {
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'CANCELED' | string
+  count: number
+}
 
 export const getSubscriptionPackages = async (): Promise<PackageFromApi[]> => {
   const res = await apiClient.get<PackageFromApi[]>('/admin/subscriptions')
@@ -98,11 +110,28 @@ export const deleteSubscriptionPackage = async (id: string): Promise<void> => {
   await apiClient.delete(`/admin/subscriptions/${id}`)
 }
 
-// ─── Revenue API ──────────────────────────────────────────────────────────────
-
 export const getRevenueStats = async (
   params?: RevenueStatsParams
 ): Promise<RevenueStatsResponse> => {
   const res = await apiClient.get<RevenueStatsResponse>('/admin/revenue/stats', { params })
+  return res.data
+}
+
+export const getConversionRate = async (): Promise<ConversionRateResponse> => {
+  const res = await apiClient.get<ConversionRateResponse>(
+    '/admin/subscriptions/stats/conversion-rate'
+  )
+  return res.data
+}
+
+export const getMonthlyConversionRate = async (): Promise<MonthlyConversionRateEntry[]> => {
+  const res = await apiClient.get<MonthlyConversionRateEntry[]>(
+    '/admin/subscriptions/stats/conversion-rate/monthly'
+  )
+  return res.data
+}
+
+export const getSubscriptionStatusStats = async (): Promise<SubscriptionStatusStat[]> => {
+  const res = await apiClient.get<SubscriptionStatusStat[]>('/admin/subscriptions/stats/status')
   return res.data
 }
