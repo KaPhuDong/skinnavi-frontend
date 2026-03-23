@@ -1,9 +1,9 @@
 import apiClient from '@/shared/lib/api-client'
 import type {
   AdminActiveSubscriptions,
-  AdminProductMonthlyStatsResponse,
   AdminUserGrowthEntry,
-  AdminUserStats
+  AdminUserStats,
+  AdminProductMonthlyStatsResponse
 } from '../types/stats'
 
 export type AdminRevenueStatsParams = {
