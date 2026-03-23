@@ -14,6 +14,7 @@ export interface PackageFromApi {
 
 export interface ActiveSubscriptionsResponse {
   activeSubscriptions: number
+  growthRate: number
   byPackage: { routinePackageId: string; activeSubscriptions: number }[]
   activeDefinition: string
 }

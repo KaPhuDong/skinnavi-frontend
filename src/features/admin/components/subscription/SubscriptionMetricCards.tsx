@@ -48,9 +48,29 @@ const STATIC_CARDS_META = [
   }
 ]
 
-const formatRevenue = (value: number): string => `${Math.round(value).toLocaleString('vi-VN')}`
+const formatCurrencyCompact = (value: number): string => {
+  if (value >= 1000000000) {
+    return (value / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B'
+  }
+  if (value >= 1000000) {
+    return (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
+  }
+  if (value >= 1000) {
+    return (value / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+  }
+  return value.toString()
+}
 
-const formatChangeText = (current: number | null, previous: number | null, suffix = 'from last month') => {
+const formatRevenue = (value: number): string => {
+  const compactValue = formatCurrencyCompact(value)
+  return `${compactValue}`
+}
+
+const formatChangeText = (
+  current: number | null,
+  previous: number | null,
+  suffix = 'from last month'
+) => {
   if (current === null || previous === null || previous <= 0) {
     return 'No previous month data'
   }
@@ -87,11 +107,13 @@ const SubscriptionMetricCards = () => {
   }, [])
 
   const activeCount = activeData?.activeSubscriptions ?? null
+  const activeGrowth = activeData?.growthRate ?? 0
+
   const mrr = revenueData?.totals.subscription ?? null
   const conversionRate = conversionData?.conversionRate ?? null
+
   const currentMonthRevenue = revenueData?.monthly.at(-1)?.subscription ?? null
   const previousMonthRevenue = revenueData?.monthly.at(-2)?.subscription ?? null
-  const activeSubscriptionsChange = formatChangeText(activeCount, null)
   const mrrChange = formatChangeText(currentMonthRevenue, previousMonthRevenue)
   const conversionUsers =
     conversionData && conversionData.totalUsers > 0
@@ -121,8 +143,14 @@ const SubscriptionMetricCards = () => {
       ),
       label: 'Active Subscriptions',
       value: loading ? '—' : activeCount !== null ? activeCount.toLocaleString() : 'N/A',
-      change: loading ? 'Loading trend...' : activeSubscriptionsChange,
-      changeColor: loading ? 'text-gray-400' : getChangeColor(activeCount, null)
+      change: loading
+        ? 'Loading trend...'
+        : `${activeGrowth >= 0 ? '+' : ''}${activeGrowth}% from last month`,
+      changeColor: loading
+        ? 'text-gray-400'
+        : activeGrowth >= 0
+          ? 'text-emerald-500'
+          : 'text-red-500'
     },
     {
       bg: '#e3f2fd',
@@ -149,7 +177,9 @@ const SubscriptionMetricCards = () => {
       label: 'Monthly Recurring Revenue',
       value: loading ? '—' : mrr !== null ? formatRevenue(mrr) : 'N/A',
       change: loading ? 'Loading trend...' : mrrChange,
-      changeColor: loading ? 'text-gray-400' : getChangeColor(currentMonthRevenue, previousMonthRevenue)
+      changeColor: loading
+        ? 'text-gray-400'
+        : getChangeColor(currentMonthRevenue, previousMonthRevenue)
     },
     ...STATIC_CARDS_META.map((c) => ({
       bg: c.bg,
