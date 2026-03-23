@@ -45,7 +45,6 @@ function App() {
 
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/users" element={<UserManagement />} />
-          <Route path="/subscriptions" element={<PlaceholderPage title="Subscriptions" />} />
           <Route path="/revenue" element={<AdminRevenue />} />
           <Route path="/subscriptions" element={<AdminSubscription />} />
           <Route path="/product" element={<PlaceholderPage title="Product" />} />
