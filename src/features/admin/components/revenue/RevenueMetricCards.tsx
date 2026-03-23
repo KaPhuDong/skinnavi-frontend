@@ -6,7 +6,13 @@ type RevenueMetricCardsProps = {
   stats: AdminRevenueStats | null
 }
 
-const formatCurrency = (value: number) => `${value.toLocaleString('en-US')}`
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    compactDisplay: 'short',
+    maximumFractionDigits: 1
+  }).format(value)
+}
 
 const formatPercent = (value: number) => `${value.toFixed(1)}%`
 
