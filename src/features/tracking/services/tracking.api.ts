@@ -9,7 +9,8 @@ import type {
   SkinAnalysesResponse,
   DailyLogsResponse,
   CompareAnalysesResponse,
-  CompareAnalysesRequest
+  CompareAnalysesRequest,
+  UpdateDailyLogDto
 } from '../types'
 
 export const getUserSkinAnalyses = async (days?: number): Promise<SkinAnalysesResponse['data']> => {
@@ -26,10 +27,23 @@ export const getDailyLogs = async (
   return res.data.data
 }
 
+export const getLatestDailyLogs = async (): Promise<DailyLogsResponse['data']> => {
+  const res = await apiClient.get<DailyLogsResponse>('/tracking/latest/daily-logs')
+  return res.data.data
+}
+
 export const compareAnalyses = async (
   request: CompareAnalysesRequest
 ): Promise<CompareAnalysesResponse['data']> => {
   const res = await apiClient.post<CompareAnalysesResponse>('/tracking/compare', request)
+  return res.data.data
+}
+
+export const updateDailyLog = async (
+  id: string,
+  is_completed: boolean
+): Promise<UpdateDailyLogDto> => {
+  const res = await apiClient.patch(`/tracking/daily-logs/${id}`, { is_completed })
   return res.data.data
 }
 
