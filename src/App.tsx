@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { MainLayout } from '@/shared/layouts/MainLayout'
 import Register from '@/features/auth/pages/Register'
 import Login from '@/features/auth/pages/Login'
@@ -6,21 +6,28 @@ import { Toaster } from '@/shared/components/ui/toaster'
 import Home from '@/features/home/pages/Home'
 import AnalysisResult from './features/analysis-result/pages/AnalysisResult'
 import Tracking from '@/features/tracking/pages/Tracking'
-import DetailedRoutine from './features/detail-packages/pages/DetailedRoutine'
+import RoutinePackageDetail from './features/detail-packages/pages/RoutinePackageDetail'
 import ScrollToTop from './shared/components/ui/ScrollToTop'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import DailyRoutine from './features/routine/pages/DailyRoutine'
 import RoutineStepDetail from './features/detail-step-routine/pages/RoutineStepDetail'
+import AboutPage from '@/features/about-us/pages/AboutUs'
 import PaymentResult from './features/payment/pages/PaymentResult'
 import Profile from './features/profile/pages/Profile'
-import Subscription from '@/features/subscription/pages/Subscription'
+import Subscription from './features/subscription/pages/Subscription'
+import UserManagement from '@/features/user-management/pages/UserManagement'
+import AdminDashboard from './features/admin/pages/AdminDashboard'
+import AdminRevenue from './features/admin/pages/AdminRevenue'
+import AdminSubscription from './features/admin/pages/AdminSubscription'
+import PlaceholderPage from './features/admin/components/PlaceholderPage'
+
 function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
         </Route>
 
@@ -31,17 +38,24 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/analysis-result" element={<AnalysisResult />} />
-            <Route path="/routine-detail/:id" element={<DetailedRoutine />} />
+            <Route path="/routine-detail/:id" element={<RoutinePackageDetail />} />
             <Route path="/daily-routine" element={<DailyRoutine />} />
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
-            <Route path="/payment-result" element={<PaymentResult />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<Profile />} />
-          
-            <Route path="/subscription" element={<Subscription />} /> 
+            <Route path="/user-subscription" element={<Subscription />} />
           </Route>
+
+          <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/revenue" element={<AdminRevenue />} />
+          <Route path="/subscriptions" element={<AdminSubscription />} />
+          <Route path="/product" element={<PlaceholderPage title="Product" />} />
+          <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
         </Route>
 
+        {/* Route 404 - Not Found */}
         <Route
           path="*"
           element={
