@@ -10,7 +10,9 @@ const PackageHero = ({ packageData }: Props) => {
       <div className="container mx-auto px-4 relative z-10">
         <h1 className="text-4xl md:text-6xl font-serif italic text-gray-700 mb-4 animate-fade-in-up">
           {packageData.duration_days >= 30
-            ? `${Math.floor(packageData.duration_days / 30)} month plan`
+            ? `${Math.floor(packageData.duration_days / 30)} ${
+                Math.floor(packageData.duration_days / 30) > 1 ? 'months' : 'month'
+              } plan`
             : `${packageData.duration_days} days plan`}
         </h1>
 
