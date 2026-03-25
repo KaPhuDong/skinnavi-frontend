@@ -1,12 +1,10 @@
 export type SkinType = 'OILY' | 'DRY' | 'NORMAL' | 'COMBINATION' | 'SENSITIVE'
 
-// product-management/types/product.ts
-
 export interface Product {
   id: string
   name: string
-  usage_role: string // Sửa từ 'type' thành 'usage_role' theo API
-  display_price: string // Sửa từ number thành string theo API
+  usage_role: string
+  display_price: string
   image_url: string
   affiliate_url: string
   is_active: boolean
@@ -17,13 +15,13 @@ export interface ApiResponse<T> {
   limit: number
   total: number
   totalPages: number
-  items: T // API trả về mảng nằm trong trường 'items'
+  items: T
 }
 
 export interface ComboProductRelation {
   id: string
   step_order: number
-  product: Product // Thông tin sản phẩm lấy từ bảng Product
+  product: Product
 }
 
 export interface Combo {
@@ -34,5 +32,5 @@ export interface Combo {
   image_url: string
   affiliate_url: string
   is_active: boolean
-  combo_products: ComboProductRelation[] // Danh sách các quan hệ
+  combo_products: ComboProductRelation[]
 }

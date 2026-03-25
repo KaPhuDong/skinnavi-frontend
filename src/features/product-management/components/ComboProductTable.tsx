@@ -4,7 +4,6 @@ import { comboApi } from '../services/product.api';
 import { EditComboModal, EditProductModal, DeleteConfirmModal } from './ComboModals';
 import { toast } from '@/shared/hooks/use-toast';
 
-/* ─── Skin Map Pastel ─── */
 const SKIN_MAP: Record<string, any> = {
   'OILY': { label: 'OILY', bg: '#FFF4ED', color: '#C2410C', border: '#FFEDD5' },
   'DRY': { label: 'DRY', bg: '#EFF6FF', color: '#1D4ED8', border: '#DBEAFE' },
@@ -14,7 +13,6 @@ const SKIN_MAP: Record<string, any> = {
   'default': { label: 'SKIN TYPE', bg: '#F9FAFB', color: '#374151', border: '#F3F4F6' }
 };
 
-/* ─── Category Styles - Pastel Palette ─── */
 const CAT_STYLES: Record<string, any> = {
   'Cleanser': { bg: '#E0F2FE', color: '#0369A1' },      
   'Makeup Remover': { bg: '#FAE8FF', color: '#A21CAF' }, 
@@ -181,7 +179,6 @@ const ComboRow = ({ combo: c, index, onEdit, onAddProduct, onEditProduct, onDele
               </span>
             </div>
             <div className="min-w-0">
-              {/* FIX: Bỏ class transition-colors group-hover:text-[#67AEFF] */}
               <div className="text-[13px] font-medium text-gray-800 line-clamp-1">{c.combo_name}</div>
               <div className="text-[10px] text-gray-400 mt-0.5 italic line-clamp-1 font-normal tracking-tight">
                 {c.combo_products?.map((cp: any) => cp.product?.usage_role).join(' • ')}
@@ -234,7 +231,6 @@ const ComboRow = ({ combo: c, index, onEdit, onAddProduct, onEditProduct, onDele
                           <span className="text-xs font-semibold text-gray-900">{Number(cp.product?.display_price).toLocaleString()}đ</span>
                         </div>
                         <div className="flex gap-1.5">
-                          {/* FIX: Bỏ hover:text-[#67AEFF] ở icon nút sửa và link */}
                           <button onClick={() => onEditProduct(c.id, cp.product, idx)} className="p-2 text-gray-400 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"><Edit3 size={13}/></button>
                           <a href={cp.product?.affiliate_url} target="_blank" rel="noreferrer" className="p-2 text-gray-400 bg-gray-50 rounded-lg hover:bg-blue-50"><ExternalLink size={13}/></a>
                           <button onClick={() => onDeleteProduct(c.id, cp.product?.name, idx)} className="p-2 text-gray-400 hover:text-red-500 bg-gray-50 rounded-lg hover:bg-red-50"><Trash2 size={13}/></button>

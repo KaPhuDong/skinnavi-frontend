@@ -3,11 +3,9 @@ import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { productApi } from '../services/product.api';
 import { toast } from '@/shared/hooks/use-toast';
 
-/* --- UI Shared Classes --- */
 const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-4 focus:ring-[#67AEFF]/10 focus:border-[#67AEFF] transition-all font-['Poppins'] bg-gray-50/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 const labelClass = "block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 font-['Poppins']";
 
-/* ─── 1. Edit Combo Modal ─── */
 export const EditComboModal = ({ isOpen, combo, onSave, onClose }: any) => {
   const [formData, setFormData] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +51,6 @@ export const EditComboModal = ({ isOpen, combo, onSave, onClose }: any) => {
   );
 };
 
-/* ─── 2. Edit Product Modal (Đảo Dropdown xuống dưới & Bỏ nút màu xám) ─── */
 export const EditProductModal = ({ isOpen, product, isNew, onSave, onClose }: any) => {
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [selectedPId, setSelectedPId] = useState('');
@@ -106,7 +103,6 @@ export const EditProductModal = ({ isOpen, product, isNew, onSave, onClose }: an
         </div>
 
         <div className="p-6 space-y-6 text-left">
-          {/* PHẦN 1: Card Preview đưa lên trên đầu để dễ nhìn món hiện tại */}
           <div className="bg-blue-50/20 border border-blue-100/50 rounded-2xl p-4 min-h-[100px] flex items-center justify-center">
             {previewProduct ? (
               <div className="flex items-start gap-4 w-full animate-in fade-in zoom-in duration-300">
@@ -127,7 +123,6 @@ export const EditProductModal = ({ isOpen, product, isNew, onSave, onClose }: an
             )}
           </div>
 
-          {/* PHẦN 2: Dropdown đưa xuống dưới cùng */}
           <div>
             <label className={labelClass}>Select Product From Library</label>
             <select className={inputClass} value={selectedPId} onChange={handleSelectChange}>
@@ -153,7 +148,6 @@ export const EditProductModal = ({ isOpen, product, isNew, onSave, onClose }: an
   );
 };
 
-/* ─── 3. Delete Confirm Modal (Bỏ màu xám) ─── */
 export const DeleteConfirmModal = ({ isOpen, title, name, onConfirm, onClose }: any) => {
   if (!isOpen) return null;
   return (
@@ -163,7 +157,6 @@ export const DeleteConfirmModal = ({ isOpen, title, name, onConfirm, onClose }: 
         <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">{title || 'Confirm Delete'}</h3>
         <p className="text-sm text-gray-500 mb-8 leading-relaxed">Are you sure you want to remove <span className="font-bold text-gray-800">"{name}"</span>?</p>
         <div className="flex gap-3">
-          {/* Sửa nút Cancel từ màu xám sang viền xanh chữ xanh cho sạch sẽ */}
           <button onClick={onClose} className="flex-1 py-3.5 bg-white text-black-400 border border-blue-100 font-bold rounded-xl hover:bg-blue-50 transition-all">Cancel</button>
           <button onClick={onConfirm} className="flex-1 py-3.5 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100 hover:bg-red-700 transition-all">Delete</button>
         </div>

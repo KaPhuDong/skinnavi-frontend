@@ -25,7 +25,6 @@ const ProductManagement: React.FC = () => {
   const [isComboModalOpen, setIsComboModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form states
   const [newProduct, setNewProduct] = useState({
     name: '', usage_role: '', display_price: '',
     image_url: '', affiliate_url: '', is_active: true
@@ -36,7 +35,6 @@ const ProductManagement: React.FC = () => {
     display_price: '', image_url: '', affiliate_url: '', is_active: true
   });
 
-  // Fetch Auto Data
   useEffect(() => {
     const fetchAutoData = async () => {
       try {
@@ -69,12 +67,9 @@ const ProductManagement: React.FC = () => {
     fetchAutoData();
   }, [refreshKey]);
 
-  // --- HANDLERS ---
-
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Chi tiết từng trường cho Product
     if (!newProduct.name.trim()) return toast({ title: "Required Field", description: "Please enter Product Name.", variant: "destructive" });
     if (!newProduct.usage_role) return toast({ title: "Required Field", description: "Please select a Category.", variant: "destructive" });
     if (!newProduct.display_price) return toast({ title: "Required Field", description: "Please enter Price.", variant: "destructive" });
@@ -98,7 +93,6 @@ const ProductManagement: React.FC = () => {
   const handleAddCombo = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Chi tiết từng trường cho Combo
     if (!newCombo.combo_name.trim()) return toast({ title: "Required Field", description: "Please enter Combo Name.", variant: "destructive" });
     if (!newCombo.skin_type_id) return toast({ title: "Required Field", description: "Please select Target Skin Type.", variant: "destructive" });
     if (!newCombo.display_price) return toast({ title: "Required Field", description: "Please enter Combo Price.", variant: "destructive" });
@@ -169,7 +163,6 @@ const ProductManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* MODAL NEW PRODUCT */}
         {isProductModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <div className="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-50">
@@ -200,7 +193,6 @@ const ProductManagement: React.FC = () => {
           </div>
         )}
 
-        {/* MODAL NEW COMBO */}
         {isComboModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm text-left">
             <div className="bg-white rounded-[1.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-50">

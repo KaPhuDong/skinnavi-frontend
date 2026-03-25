@@ -1,12 +1,11 @@
 import apiClient from '@/shared/lib/api-client'
 import { type Product, type Combo, type ApiResponse } from '../types/product'
-// --- SINGLE PRODUCTS ---
 export const productApi = {
   getProducts: async (page: number = 1, limit: number = 10): Promise<ApiResponse<Product[]>> => {
     const res = await apiClient.get<ApiResponse<Product[]>>(
       `/admin/products?page=${page}&limit=${limit}`
     )
-    return res.data // Trả về nguyên object chứa items, totalPages...
+    return res.data
   },
   getProductById: async (id: string): Promise<Product | null> => {
     const res = await apiClient.get<ApiResponse<Product>>(`/admin/products/${id}`)
@@ -25,7 +24,6 @@ export const productApi = {
     return apiClient.delete(`/admin/products/${id}`)
   },
 
-  // --- COMBOS ---
   getCombos: async (page: number = 1, limit: number = 10): Promise<ApiResponse<Combo[]>> => {
     const res = await apiClient.get<ApiResponse<Combo[]>>(
       `/admin/combos?page=${page}&limit=${limit}`

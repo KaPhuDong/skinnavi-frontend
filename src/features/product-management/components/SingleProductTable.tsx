@@ -4,7 +4,6 @@ import { type Product } from '../types/product';
 import { productApi } from '../services/product.api';
 import { toast } from '@/shared/hooks/use-toast';
 
-/* ─── CONSTANTS ─── */
 const THEME = {
   primary: '#67AEFF',
   danger: '#EF4444',
@@ -18,7 +17,6 @@ const PASTEL_COLORS = [
   { bg: '#FFF1F2', text: '#9F1239' }
 ];
 
-/* ─── EDIT MODAL COMPONENT ─── */
 const EditProductModal: React.FC<{ 
   isOpen: boolean; 
   product: Product | null; 
@@ -91,7 +89,6 @@ const EditProductModal: React.FC<{
   );
 };
 
-/* ─── MAIN COMPONENT ─── */
 const SingleProductTable: React.FC<any> = ({ itemsPerPage, currentPage, refreshKey, onTotalPagesChange, onEdit, onDelete }) => {
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,11 +160,9 @@ const SingleProductTable: React.FC<any> = ({ itemsPerPage, currentPage, refreshK
                 <td className="px-4 py-4 text-left">
                   <div className="flex items-center gap-3">
                     <img src={p.image_url} alt="" className="w-11 h-11 rounded-xl border border-gray-100 bg-white object-cover" />
-                    {/* Tên sản phẩm dùng font-medium */}
                     <div className="text-[13px] font-medium text-gray-800 line-clamp-1 max-w-[250px]">{p.name}</div>
                   </div>
                 </td>
-                {/* Giá tiền dùng font-semibold */}
                 <td className="px-4 py-4 font-semibold text-gray-900 text-sm">{Number(p.display_price).toLocaleString()}đ</td>
                 <td className="px-4 py-4 text-center">
                     <a href={p.affiliate_url} target="_blank" rel="noreferrer" className="p-2 inline-flex text-[#67AEFF] bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-all border border-blue-100/50"><ExternalLink size={14} /></a>
