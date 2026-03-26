@@ -19,6 +19,7 @@ import AdminDashboard from './features/admin/pages/AdminDashboard'
 import UserManagement from '@/features/user-management/pages/UserManagement'
 import AdminRevenue from './features/admin/pages/AdminRevenue'
 import AdminSubscription from './features/admin/pages/AdminSubscription'
+import ProductManagement from '@/features/product-management/pages/ProductManagement'
 import PlaceholderPage from './features/admin/components/PlaceholderPage'
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
       <ScrollToTop />
       <Routes>
         <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
         </Route>
@@ -43,19 +45,19 @@ function App() {
             <Route path="/step-detail/:stepId" element={<RoutineStepDetail />} />
             <Route path="/tracking" element={<Tracking />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/user-subscription" element={<Subscription />} />
           </Route>
 
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/users" element={<UserManagement />} />
+          <Route path="/product" element={<ProductManagement />} />
           <Route path="/revenue" element={<AdminRevenue />} />
           <Route path="/subscriptions" element={<AdminSubscription />} />
-          <Route path="/product" element={<PlaceholderPage title="Product" />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
         </Route>
 
-        {/* Route 404 - Not Found */}
         <Route
           path="*"
           element={
