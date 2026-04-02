@@ -40,7 +40,11 @@ export const UploadDialog = ({ children }: { children: React.ReactNode }) => {
         description: 'Please log in to upload and analyze your skin.'
       })
 
-      setTimeout(() => setIsOpen(false), 1000)
+      setTimeout(() => {
+        setIsOpen(false)
+        navigate('/login')
+      }, 1000)
+
       return
     }
 
